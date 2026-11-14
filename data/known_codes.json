@@ -1,0 +1,80 @@
+{
+ "entries": [
+  {
+   "address": "12",
+   "code": "101F01",
+   "unit": "DME engine",
+   "severity": "workshop",
+   "pl": {
+    "title": "Masa powietrza w dolocie nieprawdopodobna",
+    "what": "Sterownik silnika liczy inną ilość powietrza niż mierzy. Najczęściej fałszywe powietrze (odma / pokrywa zaworów, wąż, złączka), rzadziej czujnik.",
+    "check": "Kontrola silnika: korekty na wolnych i przy 2500 obr/min. Syczenie przy pokrywie zaworów, test korka oleju, złączki dolotu. Warsztat: test dymowy, kasowanie adaptacji po naprawie."
+   },
+   "en": {
+    "title": "Intake air mass not plausible",
+    "what": "The engine unit calculates a different air mass than it measures. Most often unmetered air (crankcase vent / valve cover, hose, coupling), less often a sensor.",
+    "check": "Engine check: fuel trims at idle and at 2500 rpm. Hissing at the valve cover, oil cap test, intake couplings. Workshop: smoke test, reset air mass adaptations after the repair."
+   },
+   "sources": [
+    "https://static.nhtsa.gov/odi/tsbs/2019/MC-10163029-9999.pdf"
+   ]
+  },
+  {
+   "address": "37",
+   "code": "B7F500",
+   "unit": "RAM audio",
+   "severity": "info",
+   "pl": {
+    "title": "Mikrofon nieskalibrowany",
+    "what": "Moduł audio nie ma kalibracji mikrofonu do rozmów.",
+    "check": "Jeśli rozmówcy słyszą dobrze – zignoruj. Inaczej: kalibracja mikrofonu w ISTA."
+   },
+   "en": {
+    "title": "Microphone not calibrated",
+    "what": "The audio module has no hands-free microphone calibration.",
+    "check": "If callers hear you fine, ignore it. Otherwise: microphone calibration in ISTA."
+   },
+   "sources": [
+    "https://static.nhtsa.gov/odi/tsbs/2021/MC-10201146-9999.pdf"
+   ]
+  },
+  {
+   "address": "40",
+   "code": "804070",
+   "unit": "BDC body",
+   "severity": "watch",
+   "pl": {
+    "title": "Zasilanie / przekaźnik w module nadwozia",
+    "what": "Zakres kodów zasilania BDC; często po rozładowaniu akumulatora lub długim postoju z zapłonem.",
+    "check": "Skasuj w Fault Scanner. Jeśli wraca – test akumulatora."
+   },
+   "en": {
+    "title": "Power supply / relay in the body module",
+    "what": "BDC power supply code range; often after a flat battery or a long stop with the ignition on.",
+    "check": "Clear it in Fault Scanner. If it returns, have the battery tested."
+   },
+   "sources": [
+    "https://www.revue-technique-auto.fr/codes-defauts-obd/23-bmw/code-specifique-constructeur?p=45"
+   ]
+  },
+  {
+   "address": "5D",
+   "code": "800ABF",
+   "unit": "KAFAS camera",
+   "severity": "info",
+   "pl": {
+    "title": "Kamera KAFAS: widok chwilowo ograniczony",
+    "what": "Kamera chwilowo nic nie widziała: brudna szyba, smugi, deszcz, słońce, mróz. To nie usterka.",
+    "check": "Umyj szybę przed kamerą, sprawdź wycieraczki, skasuj."
+   },
+   "en": {
+    "title": "KAFAS camera: view temporarily impaired",
+    "what": "The camera briefly could not see: dirty glass, smears, rain, low sun, frost. Not a fault in itself.",
+    "check": "Clean the windscreen in front of the camera, check the wipers, clear it."
+   },
+   "sources": [
+    "https://static.nhtsa.gov/odi/tsbs/2023/MC-10236236-9999.pdf"
+   ]
+  }
+ ]
+}

@@ -4,5 +4,9 @@ import PackageDescription
 let package = Package(
     name: "EnetDiag",
     platforms: [.macOS(.v14)],
-    targets: [.executableTarget(name: "EnetDiag")]
+    targets: [
+        .target(name: "EnetCore"),
+        .executableTarget(name: "EnetDiag", dependencies: ["EnetCore"]),
+        .testTarget(name: "EnetCoreTests", dependencies: ["EnetCore"]),
+    ]
 )
