@@ -7,12 +7,15 @@ public struct Hint: Sendable, Hashable {
     public enum Severity: String, Codable, Sendable { case workshop, watch, info }
     public let severity: Severity, title: L, what: L, check: L
     public let sources: [String]
+    /// high / medium / low: how well the sources tie the code to this meaning
+    public var confidence: String = "high"
 }
 
 struct CodeEntry: Decodable {
     struct T: Decodable { let title: String, what: String, check: String }
     let address: String, code: String, severity: Hint.Severity, pl: T, en: T
     let sources: [String]?
+    let confidence: String?
 }
 
 public enum Hints {
@@ -43,7 +46,7 @@ public enum Hints {
         return Dictionary(list.map { e in
             (e.address.uppercased() + ":" + e.code.uppercased(),
              Hint(severity: e.severity, title: L(e.pl.title, e.en.title), what: L(e.pl.what, e.en.what),
-                  check: L(e.pl.check, e.en.check), sources: e.sources ?? []))
+                  check: L(e.pl.check, e.en.check), sources: e.sources ?? [], confidence: e.confidence ?? "high"))
         }, uniquingKeysWith: { a, _ in a })
     }()
 

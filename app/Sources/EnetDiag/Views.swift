@@ -11,8 +11,9 @@ struct RootView: View {
     var body: some View {
         NavigationSplitView {
             List(Section.allCases, selection: $m.section) { s in
-                Label(s.title, systemImage: s.symbol).tag(s)
+                Label(s.title, systemImage: s.symbol)
                     .badge(s == .faults ? m.faults.filter(\.active).count : 0)
+                    .tag(Optional(s))
             }
             .navigationSplitViewColumnWidth(min: 200, ideal: 220)
             .safeAreaInset(edge: .bottom) { SidebarFooter() }
