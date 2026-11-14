@@ -57,6 +57,17 @@ enum Section: String, CaseIterable, Identifiable {
     @Published private(set) var captures: [URL] = Captures.list()
 
     var connected: Bool { car != nil }
+    var isDemo: Bool { connection == "DEMO" }
+
+    /// The simulated car: faults, moving engine values and a ready engine check.
+    func connectDemo() async {
+        await disconnect()
+        car = Car.demo()
+        connection = "DEMO"
+        report = Analysis.analyze(Car.demoLog())
+        reportName = t("demo – log 4 min", "demo – 4 min log")
+        await readFaults()
+    }
 
     // MARK: connection
 

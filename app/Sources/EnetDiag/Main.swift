@@ -39,6 +39,8 @@ struct EnetDiagApp: App {
                 Button(model.connected ? t("Rozłącz", "Disconnect") : t("Połącz", "Connect")) {
                     Task { model.connected ? await model.disconnect() : await model.connect() }
                 }.keyboardShortcut("k")
+                Button(t("Wypróbuj demo", "Try the demo")) { Task { await model.connectDemo() } }
+                    .keyboardShortcut("d", modifiers: [.command, .shift])
                 Divider()
                 Button(t("Odczytaj błędy", "Read faults")) { model.section = .faults; Task { await model.readFaults() } }
                     .keyboardShortcut("r").disabled(!model.connected)

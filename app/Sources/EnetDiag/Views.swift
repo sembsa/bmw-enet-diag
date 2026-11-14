@@ -33,7 +33,10 @@ struct RootView: View {
         .navigationTitle("")
         .overlay(alignment: .bottom) { StatusBanner() }
         .id(lang)                      // a language change redraws everything
-        .task { if CommandLine.arguments.contains("--replay"), !m.connected { await m.connect() } }
+        .task {
+            if CommandLine.arguments.contains("--demo") { await m.connectDemo() }
+            else if CommandLine.arguments.contains("--replay"), !m.connected { await m.connect() }
+        }
     }
 }
 
@@ -56,14 +59,18 @@ struct Toolbar: ToolbarContent {
         ToolbarItem(placement: .navigation) {
             HStack(spacing: 6) {
                 Circle().fill(m.connected ? .green : .secondary.opacity(0.4)).frame(width: 8, height: 8)
-                Text(m.connected ? m.connection : t("Niepołączono", "Not connected"))
-                    .font(.callout).foregroundStyle(.secondary).lineLimit(1)
+                if m.isDemo { Pill(text: "DEMO", color: .orange) } else {
+                    Text(m.connected ? m.connection : t("Niepołączono", "Not connected"))
+                        .font(.callout).foregroundStyle(.secondary).lineLimit(1)
+                }
             }
         }
         ToolbarItemGroup(placement: .primaryAction) {
             if m.busy != nil { ProgressView().controlSize(.small) }
             if !m.connected {
                 TextField(t("IP bramki (auto)", "Gateway IP (auto)"), text: $m.host).frame(width: 150).textFieldStyle(.roundedBorder)
+                Button { Task { await m.connectDemo() } } label: { Label("Demo", systemImage: "play.rectangle") }
+                    .help(t("Symulowane auto", "A simulated car"))
                 Button { Task { await m.connect() } } label: { Label(t("Połącz", "Connect"), systemImage: "cable.connector") }
                     .help(t("Kabel ENET w gnieździe OBD, zapłon włączony", "ENET cable in the OBD port, ignition on"))
             } else {
@@ -101,7 +108,10 @@ struct NotConnected: View {
             Text(t("Kabel ENET do gniazda OBD i do Maca, zapłon włączony. Bramka zostanie znaleziona sama, albo wpisz jej IP.",
                    "ENET cable into the OBD port and the Mac, ignition on. The gateway is found by itself, or enter its IP."))
         } actions: {
-            Button(t("Połącz", "Connect")) { Task { await m.connect() } }.buttonStyle(.borderedProminent).tint(Theme.blue)
+            HStack {
+                Button(t("Połącz", "Connect")) { Task { await m.connect() } }.buttonStyle(.borderedProminent).tint(Theme.blue)
+                Button(t("Wypróbuj demo", "Try the demo")) { Task { await m.connectDemo() } }
+            }
         }
     }
 }
@@ -112,59 +122,137 @@ struct OverviewPage: View {
     @EnvironmentObject var m: Model
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
+            VStack(alignment: .leading, spacing: 20) {
                 Header(title: "BMW ENET Diag", subtitle: t("Diagnostyka tylko do odczytu przez kabel ENET", "Read-only diagnostics over the ENET cable"))
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: 220), spacing: 14)], spacing: 14) {
-                    Card(title: t("Połączenie", "Connection"), symbol: "cable.connector") {
-                        Text(m.connected ? t("Połączono", "Connected") : t("Niepołączono", "Not connected")).font(.title2.weight(.semibold))
-                        Text(m.connected ? m.connection : t("Kabel ENET, zapłon", "ENET cable, ignition on")).font(.caption).foregroundStyle(.secondary).lineLimit(2)
-                    }
-                    Card(title: t("Błędy", "Faults"), symbol: "exclamationmark.triangle") {
-                        HStack(alignment: .firstTextBaseline) {
-                            Text("\(m.faults.count)").font(.system(size: 34, weight: .semibold, design: .rounded))
-                            Text(t("aktywnych: ", "active: ") + "\(m.faults.filter(\.active).count)").foregroundStyle(.secondary)
-                        }
-                        if let d = m.faultsAt { Text(d.formatted(date: .abbreviated, time: .shortened)).font(.caption).foregroundStyle(.secondary) }
-                    }
-                    Card(title: t("Do warsztatu", "For a workshop"), symbol: "wrench.and.screwdriver") {
-                        Text("\(m.faults.filter { $0.hint?.severity == .workshop }.count)").font(.system(size: 34, weight: .semibold, design: .rounded))
-                            .foregroundStyle(Theme.red)
-                        Text(t("wg naszych podpowiedzi", "by our hints")).font(.caption).foregroundStyle(.secondary)
-                    }
-                    Card(title: t("Kontrola silnika", "Engine check"), symbol: "engine.combustion") {
-                        if let r = m.report {
-                            let worst = r.findings.map(\.level).contains(.problem) ? Finding.Level.problem : r.findings.map(\.level).contains(.watch) ? .watch : .ok
-                            Label(worst == .ok ? t("Bez uwag", "All good") : worst == .watch ? t("Do obserwacji", "Worth a look") : t("Problem", "Problem"),
-                                  systemImage: worst.symbol).font(.title3.weight(.semibold)).foregroundStyle(worst.color)
-                        } else {
-                            Text(t("Brak logu", "No log yet")).font(.title3.weight(.semibold))
-                        }
-                        Text(m.reportName ?? t("Nagraj log na rozgrzanym silniku", "Record a log with a warm engine")).font(.caption).foregroundStyle(.secondary)
-                    }
+                if m.connected { Dashboard() } else { Welcome() }
+            }
+            .padding(28)
+            .frame(maxWidth: 1100, alignment: .leading)
+        }
+    }
+}
+
+/// Not connected: what you need, and the two ways in.
+struct Welcome: View {
+    @EnvironmentObject var m: Model
+    var body: some View {
+        VStack(alignment: .leading, spacing: 22) {
+            HStack(alignment: .center, spacing: 28) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 22).fill(LinearGradient(colors: [Theme.navy, Theme.blue.opacity(0.85)], startPoint: .bottomLeading, endPoint: .topTrailing))
+                    Image(systemName: "car.side.fill").font(.system(size: 54, weight: .regular)).foregroundStyle(.white)
                 }
-                if m.connected {
-                    HStack {
-                        Button { m.section = .faults; Task { await m.readFaults() } } label: { Label(t("Odczytaj błędy", "Read faults"), systemImage: "list.bullet.rectangle") }
-                        Button { Task { await m.runProbe() } } label: { Label(t("Pełny odczyt silnika", "Full engine read"), systemImage: "doc.text.magnifyingglass") }
-                        Button { m.section = .engine } label: { Label(t("Kontrola silnika", "Engine check"), systemImage: "engine.combustion") }
-                    }
-                    .controlSize(.large)
-                } else {
-                    Button { Task { await m.connect() } } label: { Label(t("Połącz z autem", "Connect to the car"), systemImage: "cable.connector") }
-                        .buttonStyle(.borderedProminent).tint(Theme.blue).controlSize(.large)
+                .frame(width: 150, height: 110)
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(t("Podłącz auto, żeby zacząć", "Connect your car to start")).font(.title.weight(.semibold))
+                    Text(t("Aplikacja odczyta błędy ze wszystkich sterowników, dane silnika na żywo i zrobi kontrolę silnika. Niczego nie zapisuje ani nie kasuje.",
+                           "The app reads every control unit's faults and live engine data, and runs an engine check. It writes and clears nothing."))
+                        .foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                 }
-                if let p = m.probe {
-                    Card(title: t("Ostatni pełny odczyt", "Last full read"), symbol: "doc.text.magnifyingglass") {
-                        Grid(alignment: .leading, horizontalSpacing: 16, verticalSpacing: 6) {
-                            GridRow { Text("VIN").foregroundStyle(.secondary); Text(p.vin ?? "–").textSelection(.enabled) }
-                            GridRow { Text(t("Przepływomierz", "Air mass meter")).foregroundStyle(.secondary); Text(p.hasMaf ? t("jest", "fitted") : t("brak (model w sterowniku)", "none (the unit's model)")) }
-                            GridRow { Text(t("Kody OBD", "OBD codes")).foregroundStyle(.secondary); Text((p.obdStored + p.obdPending).joined(separator: ", ").ifEmpty("–")) }
-                            GridRow { Text(t("Wartości", "Values")).foregroundStyle(.secondary); Text(p.knownValues.joined(separator: ", ")).lineLimit(2) }
+            }
+            HStack(alignment: .top, spacing: 14) {
+                Step(n: 1, symbol: "cable.connector", text: t("Kabel ENET do gniazda OBD (pod kierownicą) i do Maca", "ENET cable into the OBD port (under the wheel) and the Mac"))
+                Step(n: 2, symbol: "key.fill", text: t("Zapłon włączony; do danych na żywo – silnik pracuje", "Ignition on; for live data, the engine running"))
+                Step(n: 3, symbol: "antenna.radiowaves.left.and.right", text: t("Połącz – bramka zostanie znaleziona sama", "Connect – the gateway is found by itself"))
+            }
+            HStack(spacing: 12) {
+                Button { Task { await m.connect() } } label: { Label(t("Połącz z autem", "Connect to the car"), systemImage: "cable.connector").padding(.horizontal, 6) }
+                    .buttonStyle(.borderedProminent).tint(Theme.blue)
+                Button { Task { await m.connectDemo() } } label: { Label(t("Wypróbuj demo", "Try the demo"), systemImage: "play.rectangle").padding(.horizontal, 6) }
+                    .buttonStyle(.bordered)
+            }
+            .controlSize(.large)
+            Text(t("Demo pokazuje symulowane auto: kilka błędów, zmieniające się wartości silnika i gotową kontrolę silnika.",
+                   "The demo shows a simulated car: a few faults, moving engine values and a finished engine check."))
+                .font(.caption).foregroundStyle(.secondary)
+        }
+    }
+}
+
+struct Step: View {
+    let n: Int, symbol: String, text: String
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Text("\(n)").font(.headline.monospacedDigit()).frame(width: 26, height: 26).background(Theme.blue.opacity(0.18), in: Circle()).foregroundStyle(Theme.blue)
+                Spacer()
+                Image(systemName: symbol).font(.title3).foregroundStyle(.secondary)
+            }
+            Text(text).font(.callout).fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(16).frame(maxWidth: .infinity, minHeight: 110, alignment: .topLeading)
+        .background(.background.secondary, in: RoundedRectangle(cornerRadius: 12))
+        .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(.separator.opacity(0.5)))
+    }
+}
+
+/// One number with a caption, all the same size.
+struct Stat: View {
+    let title: String, symbol: String, value: String, caption: String
+    var color: Color = .primary
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Label(title, systemImage: symbol).font(.subheadline.weight(.semibold)).foregroundStyle(.secondary)
+            Spacer(minLength: 0)
+            Text(value).font(.system(size: 30, weight: .semibold, design: .rounded)).foregroundStyle(color).lineLimit(1).minimumScaleFactor(0.6)
+            Text(caption).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+        }
+        .padding(16).frame(maxWidth: .infinity, minHeight: 128, maxHeight: 128, alignment: .topLeading)
+        .background(.background.secondary, in: RoundedRectangle(cornerRadius: 12))
+        .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(.separator.opacity(0.5)))
+    }
+}
+
+struct Dashboard: View {
+    @EnvironmentObject var m: Model
+    var body: some View {
+        let active = m.faults.filter(\.active).count
+        let workshop = m.faults.filter { $0.hint?.severity == .workshop }.count
+        let levels = m.report?.findings.map(\.level) ?? []
+        let worst: Finding.Level? = m.report == nil ? nil : levels.contains(.problem) ? .problem : levels.contains(.watch) ? .watch : .ok
+        VStack(alignment: .leading, spacing: 20) {
+            Grid(horizontalSpacing: 14, verticalSpacing: 14) {
+                GridRow {
+                    Stat(title: t("Połączenie", "Connection"), symbol: "cable.connector", value: m.isDemo ? "DEMO" : t("Połączono", "Connected"),
+                         caption: m.isDemo ? t("symulowane auto", "simulated car") : m.connection, color: m.isDemo ? .orange : .green)
+                    Stat(title: t("Błędy", "Faults"), symbol: "exclamationmark.triangle", value: "\(m.faults.count)",
+                         caption: t("aktywnych: ", "active: ") + "\(active)", color: active > 0 ? Theme.red : .primary)
+                    Stat(title: t("Do warsztatu", "For a workshop"), symbol: "wrench.and.screwdriver", value: "\(workshop)",
+                         caption: t("wg naszych podpowiedzi", "by our hints"), color: workshop > 0 ? Theme.red : .green)
+                    Stat(title: t("Kontrola silnika", "Engine check"), symbol: "engine.combustion",
+                         value: worst.map { $0 == .ok ? t("Bez uwag", "All good") : $0 == .watch ? t("Uwagi", "Notes") : t("Problem", "Problem") } ?? "–",
+                         caption: m.reportName ?? t("nagraj log na ciepłym silniku", "record a log, engine warm"), color: worst?.color ?? .secondary)
+                }
+            }
+            HStack(spacing: 10) {
+                Button { m.section = .faults } label: { Label(t("Zobacz błędy", "View faults"), systemImage: "list.bullet.rectangle") }
+                Button { m.section = .live; m.startLive() } label: { Label(t("Dane na żywo", "Live data"), systemImage: "waveform.path.ecg") }
+                Button { m.section = .engine } label: { Label(t("Kontrola silnika", "Engine check"), systemImage: "engine.combustion") }
+                Button { Task { await m.runProbe() } } label: { Label(t("Pełny odczyt", "Full read"), systemImage: "doc.text.magnifyingglass") }
+            }
+            .controlSize(.large)
+            if let top = m.faults.first(where: { $0.active }) {
+                Card(title: t("Najważniejsze teraz", "Most important now"), symbol: "flag.fill") {
+                    HStack(alignment: .top, spacing: 12) {
+                        Pill(text: top.statusText, color: top.statusColor)
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("\(top.code) · \(top.unit)").font(.headline.monospaced())
+                            Text(top.hint?.title.text ?? t("Brak naszego opisu – zapytaj asystenta AI", "No note of ours – ask your AI assistant"))
+                            if let h = top.hint { Text(h.check.text).font(.callout).foregroundStyle(.secondary) }
                         }
                     }
                 }
             }
-            .padding(24)
+            if let p = m.probe {
+                Card(title: t("Ostatni pełny odczyt", "Last full read"), symbol: "doc.text.magnifyingglass") {
+                    Grid(alignment: .leading, horizontalSpacing: 16, verticalSpacing: 6) {
+                        GridRow { Text("VIN").foregroundStyle(.secondary); Text(p.vin ?? "–").textSelection(.enabled) }
+                        GridRow { Text(t("Przepływomierz", "Air mass meter")).foregroundStyle(.secondary); Text(p.hasMaf ? t("jest", "fitted") : t("brak (model w sterowniku)", "none (the unit's model)")) }
+                        GridRow { Text(t("Kody OBD", "OBD codes")).foregroundStyle(.secondary); Text((p.obdStored + p.obdPending).joined(separator: ", ").ifEmpty("–")) }
+                        GridRow { Text(t("Wartości", "Values")).foregroundStyle(.secondary); Text(p.knownValues.joined(separator: ", ")).lineLimit(2) }
+                    }
+                }
+            }
         }
     }
 }
@@ -202,22 +290,22 @@ struct FaultsPage: View {
                                                description: Text(t("Żaden sterownik nie zgłasza błędów.", "No control unit reports a fault.")))
                     } else {
                         Table(shown, selection: $selection) {
-                            TableColumn(t("Status", "Status")) { f in Pill(text: f.statusText, color: f.statusColor) }.width(84)
-                            TableColumn(t("Kod", "Code")) { f in Text(f.code).font(.body.monospaced().weight(.semibold)) }.width(80)
-                            TableColumn(t("Sterownik", "Control unit")) { f in Label(f.unit, systemImage: f.kindSymbol).lineLimit(1) }.width(min: 120, ideal: 150, max: 190)
+                            TableColumn(t("Status", "Status")) { f in Pill(text: f.statusText, color: f.statusColor) }.width(78)
+                            TableColumn(t("Kod", "Code")) { f in Text(f.code).font(.body.monospaced().weight(.semibold)) }.width(72)
+                            TableColumn(t("Sterownik", "Control unit")) { f in Label(f.unit, systemImage: f.kindSymbol).lineLimit(1) }.width(min: 110, ideal: 140, max: 170)
                             TableColumn(t("Opis", "Description")) { f in
                                 if let h = f.hint {
                                     HStack { Image(systemName: h.severity.symbol).foregroundStyle(h.severity.color); Text(h.title.text) }
                                 } else {
                                     Text(t("Brak opisu – zapytaj asystenta AI", "No note – ask your AI assistant")).foregroundStyle(.secondary)
                                 }
-                            }.width(min: 220, ideal: 360)
+                            }.width(min: 160, ideal: 320)
                         }
                     }
                 }
-                .frame(minWidth: 520)
+                .frame(minWidth: 480, maxWidth: .infinity)
                 FaultInspector(fault: m.faults.first { $0.id == selection })
-                    .frame(minWidth: 260, idealWidth: 320, maxWidth: 420)
+                    .frame(minWidth: 240, idealWidth: 280, maxWidth: 320)
             }
             .searchable(text: $search, prompt: t("Szukaj kodu lub sterownika", "Search code or unit"))
         }

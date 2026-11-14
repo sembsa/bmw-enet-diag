@@ -196,3 +196,20 @@ final class MCPTests: XCTestCase {
         XCTAssertTrue(text.contains("intake leak"), text)
     }
 }
+
+final class DemoTests: XCTestCase {
+    func testDemoCarDecodesAndShowsALeak() async throws {
+        let car = Car.demo()
+        let s = try await car.snapshot()
+        XCTAssertNotNil(s["rpm"]); XCTAssertNotNil(s["ltft"]); XCTAssertNotNil(s["voltage"])
+        XCTAssertEqual(s["coolant"]!, 74, accuracy: 2)
+        let f = try await car.faults()
+        XCTAssertEqual(f.first?.code, "101F01")
+        let p = try await car.probe()
+        XCTAssertEqual(p.vin, "WBADEMO0000000000")
+        XCTAssertEqual(p.obdStored, ["P0171"])
+        let r = Analysis.analyze(Car.demoLog())
+        XCTAssertEqual(r.findings.first { $0.check == "mixture" }?.level, .problem)
+        XCTAssertEqual(r.findings.first { $0.check == "charging" }?.level, .ok)
+    }
+}
