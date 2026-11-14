@@ -5,3 +5,4 @@ __pycache__/
 .swiftpm/
 build/
 .swiftpm/
+.DS_Store

@@ -10,7 +10,7 @@ How things were checked:
 - **Not done:** real window screenshots. The screen was locked for the whole run, so `winshot` / `screencapture` failed ("could not create image from window"). Instead the app's own views were rendered offscreen from a scratch copy (demo car, light and dark). These show page content but no window chrome, toolbar or glass, so toolbar and material remarks come from the code.
 - **Not done:** a real click on the sidebar (no input events allowed), and anything against a real car.
 
-Renders: `/private/tmp/claude-501/-Users-strzesniewski-Temp-bmw-f40/afa599b1-c5a4-49c6-8799-2f727774d7b1/scratchpad/audit/render-*.png`
+Renders: offscreen, demo data (not kept in the repo).
 
 ## Summary verdict
 
