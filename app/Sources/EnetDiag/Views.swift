@@ -36,6 +36,7 @@ struct RootView: View {
         .task {
             if CommandLine.arguments.contains("--demo") { await m.connectDemo() }
             else if CommandLine.arguments.contains("--replay"), !m.connected { await m.connect() }
+            if m.section == .live { m.startLive() }                         // screenshots of a replay
         }
     }
 }
