@@ -314,6 +314,11 @@ final class IdentityTests: XCTestCase {
         XCTAssertEqual(Norms.check("voltage", 12.0, in: warmIdle)?.ok, false)
         XCTAssertNil(Norms.check("ltft", 14, in: ["rpm": 800, "coolant": 40, "fuel_status": 1])?.ok)   // open loop: not judged
         XCTAssertNil(Norms.check("rail", 350, in: warmIdle))                                            // engine-specific: no norm
+        let b38 = Engine.named("B38")
+        XCTAssertEqual(Norms.check("rail", 348.7, in: warmIdle, engine: b38)?.ok, true)                 // the real F40 reading
+        XCTAssertEqual(Norms.check("rail", 300, in: warmIdle, engine: Engine.named("N20"))?.ok, false)
+        XCTAssertEqual(Norms.check("map", 91, in: warmIdle.merging(["baro": 99]) { a, _ in a }, engine: b38)?.ok, true)
+        XCTAssertNil(Norms.check("maf", 2.4, in: warmIdle, engine: b38)?.ok)                            // rule of thumb: shown, not judged
     }
 
     func testNetworkFamilyHint() {

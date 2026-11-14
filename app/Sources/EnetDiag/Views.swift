@@ -260,7 +260,7 @@ struct Dashboard: View {
                          caption: t("wg naszych podpowiedzi", "by our hints"), color: workshop > 0 ? .red : .green)
                     Stat(title: t("Kontrola silnika", "Engine Check"), symbol: "engine.combustion",
                          value: worst.map { $0 == .ok ? t("Bez uwag", "All Good") : $0 == .watch ? t("Uwagi", "Notes") : t("Problem", "Problem") } ?? "–",
-                         caption: m.reportName ?? t("nagraj log na ciepłym silniku", "record a log, engine warm"), color: worst?.color ?? .secondary)
+                         caption: m.reportOrigin, color: worst?.color ?? .secondary)
                     Stat(title: t("Przebieg", "Odometer"), symbol: "road.lanes", value: m.live.last?["odometer"].map { "\(Int($0)) km" } ?? "–",
                          caption: m.isDemo ? t("symulowane auto", "simulated car") : m.connection)
                 }
@@ -494,7 +494,7 @@ struct Tile: View {
                 Label {
                     Text(t("norma ", "normal ") + norm.range.text + (norm.note.map { " · " + $0.text } ?? ""))
                 } icon: {
-                    Image(systemName: norm.ok == true ? "checkmark.circle.fill" : norm.ok == false ? "exclamationmark.triangle.fill" : "clock")
+                    Image(systemName: norm.ok == true ? "checkmark.circle.fill" : norm.ok == false ? "exclamationmark.triangle.fill" : "info.circle")
                         .foregroundStyle(color)
                 }
                 .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
@@ -507,6 +507,7 @@ struct Tile: View {
 
 struct LivePage: View {
     @EnvironmentObject var m: Model
+    @AppStorage("engine") var engine = ""
     static let digits: [String: Int] = ["lambda": 3, "lambda_cmd": 3, "voltage": 2, "stft": 1, "ltft": 1, "maf": 1, "rail": 1, "fuel_rate": 1]
     static let groupTitle: [Pid.Group: L] = [.engine: L("Silnik", "Engine"), .air: L("Powietrze", "Air"), .fuel: L("Paliwo i mieszanka", "Fuel and Mixture"),
                                              .temps: L("Temperatury", "Temperatures"), .status: L("Stan i elektryka", "Status and Electrical")]
@@ -539,7 +540,7 @@ struct LivePage: View {
                             GroupBox {
                                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 150), spacing: 14)], alignment: .leading, spacing: 14) {
                                     ForEach(pids, id: \.key) { p in Tile(label: Pids.label(p), value: last[p.key], unit: p.unit, digits: Self.digits[p.key] ?? 0,
-                                                                     norm: last[p.key].flatMap { Norms.check(p.key, $0, in: last) }) }
+                                                                     norm: last[p.key].flatMap { Norms.check(p.key, $0, in: last, engine: Engine.named(engine)) }) }
                                 }
                                 .padding(12)
                             } label: { Text(Self.groupTitle[g]?.text ?? "").font(.headline).padding(.bottom, 2) }
@@ -814,6 +815,7 @@ struct EnginePage: View {
             let worst: Finding.Level = levels.contains(.problem) ? .problem : levels.contains(.watch) ? .watch : r.findings.isEmpty ? .unknown : .ok
             let related = m.faults.filter { f in r.findings.contains { $0.level != .ok && $0.level != .unknown && $0.relatedKinds.contains(f.kind) } }
             let file = m.captures.first { $0.lastPathComponent == m.reportName }
+            ReportSourceBanner(again: { m.newCheck = true })
             Card {
                 HStack(alignment: .top, spacing: 14) {
                     Image(systemName: worst.symbol).font(.system(size: 40)).foregroundStyle(worst.color)
@@ -984,9 +986,23 @@ struct Copyable: View {
 
 struct SettingsView: View {
     @AppStorage("host") var host = ""
+    @AppStorage("engine") var engine = ""
     var body: some View {
         Form {
             TextField(t("IP bramki ENET", "ENET gateway IP"), text: $host, prompt: Text(t("automatycznie", "automatic")))
+            SwiftUI.Section {
+                Picker(t("Silnik", "Engine"), selection: $engine) {
+                    Text(t("Ogólny (dowolny benzynowy)", "Generic (any petrol)")).tag("")
+                    ForEach(Engine.all) { Text($0.name).tag($0.id) }
+                }
+                if let note = Engine.named(engine)?.note {
+                    Text(note.text).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                }
+            } footer: {
+                Text(t("Auto nie podaje przez OBD, jaki ma silnik – wybierz go, a „Na żywo” pokaże normy dla niego (ciśnienie paliwa, kolektor, przepływomierz). Źródła: podręczniki i biuletyny BMW.",
+                       "The car doesn't say its engine over OBD – pick it, and Live shows its norms (fuel pressure, manifold, air mass). Sources: BMW manuals and bulletins."))
+                    .font(.caption).foregroundStyle(.secondary)
+            }
             LabeledContent(t("Język", "Language")) {
                 Text(t("Ustawienia systemowe › Ogólne › Język i region › Aplikacje", "System Settings › General › Language & Region › Applications"))
                     .font(.caption).foregroundStyle(.secondary)
@@ -997,5 +1013,42 @@ struct SettingsView: View {
         }
         .formStyle(.grouped)
         .frame(width: 480)
+    }
+}
+
+/// Says loudly whether the engine-check result is a fresh recording, an old log loaded from disk, or the demo.
+struct ReportSourceBanner: View {
+    @EnvironmentObject var m: Model
+    let again: () -> Void
+    var body: some View {
+        let (symbol, color, title, detail): (String, Color, String, String) = switch m.reportSource {
+        case .fresh: ("record.circle", .green, t("NOWA KONTROLA", "NEW CHECK"),
+                      t("Nagrana teraz na podłączonym aucie", "Recorded just now on the connected car"))
+        case .file: ("doc.text.magnifyingglass", .orange, t("WCZYTANY ZAPIS", "LOADED LOG"),
+                     t("Wynik z wcześniejszego pliku – to nie jest bieżący stan auta", "A result from an earlier file – not the car's current state"))
+        case .demo, nil: ("play.rectangle", Theme.blue, t("DEMO", "DEMO"), t("Dane symulowane, nie z Twojego auta", "Simulated data, not from your car"))
+        }
+        HStack(spacing: 14) {
+            Image(systemName: symbol).font(.system(size: 28, weight: .semibold)).foregroundStyle(color)
+            VStack(alignment: .leading, spacing: 3) {
+                HStack(spacing: 8) {
+                    Pill(text: title, color: color)
+                    if let d = m.reportDate {
+                        Text(d.formatted(date: .abbreviated, time: .shortened)).font(.headline)
+                    }
+                }
+                Text(detail + (m.reportSource == .demo ? "" : " · " + (m.reportName ?? ""))).foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer()
+            if m.reportSource == .file {
+                Button(action: again) { Label(t("Zrób nową kontrolę", "Run a New Check"), systemImage: "record.circle") }
+                    .buttonStyle(.glassProminent)
+            }
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(color.opacity(0.12), in: RoundedRectangle(cornerRadius: 12))
+        .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(color.opacity(0.5), lineWidth: 1.5))
     }
 }

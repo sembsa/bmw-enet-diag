@@ -1,0 +1,892 @@
+{
+  "schema_version": 1,
+  "generated": "2026-11-14",
+  "scope": "Typical operating values visible to a generic SAE J1979 mode-01 reader. Public sources only (BMW technical training manuals publicly mirrored on archive.org / bmwtechinfo, NHTSA-published BMW SIs, BMW press, forums, tuner docs). Numbers are plausibility windows, not pass/fail limits.",
+  "generic_notes": {
+    "units": "OBD PID 0x0B MAP is absolute kPa (max 255). PID 0x23 fuel rail gauge pressure in kPa x10 (max 655,350 kPa) is needed for 350 bar GDI; PID 0x22 range is too small. PID 0x10 MAF in g/s; BMW tools show kg/h (1 g/s = 3.6 kg/h).",
+    "valvetronic_map": "On Valvetronic engines low idle vacuum is NORMAL; do not flag 'high MAP at idle' as a vacuum leak. Compare MAP to BARO (PID 0x33).",
+    "omitted": [
+      "idle_rpm warm/cold (no public BMW figure or reliable logs found for any listed engine)",
+      "MAF at 2500 rpm no-load",
+      "fuel rail pressure at idle",
+      "stock peak boost for B38/B48/N20/N55",
+      "generic fuel-trim % window (no BMW public figure)"
+    ]
+  },
+  "sources_general": [
+    "https://archive.org/download/BMWTechnicalTrainingDocuments/ST1111%20N20%20Engine/N20%20Engine.pdf",
+    "https://bmwtechinfo.bmwgroup.com/tech_training_manual/ST1111%20N20%20Engine.pdf",
+    "https://archive.org/download/BMWTechnicalTrainingDocuments/ST916%20N55%20Engine/N55_Engine_web.pdf",
+    "https://archive.org/download/BMWTechnicalTrainingDocuments/ST1505%20B58%20Engine/B58%20Engine.pdf",
+    "https://archive.org/download/BMWTechnicalTrainingDocuments/ST1508%20F48%20Complete%20Vehicle/02_B46%20Engine.pdf",
+    "https://archive.org/download/BMWTechnicalTrainingDocuments/ST1408%20I12%20Complete%20Vehicle%20_/I8.pdf",
+    "https://archive.org/download/BMWTechnicalTrainingDocuments/ST1306%20N57TU%20Engine/N57TU%20Engine.pdf",
+    "https://archive.org/download/BMWTechnicalTrainingDocuments/ST055%20Engine%20Electronics/07_VALVETRONIC.pdf",
+    "https://static.nhtsa.gov/odi/tsbs/2017/MC-10136709-9999.pdf",
+    "https://static.nhtsa.gov/odi/tsbs/2017/MC-10146626-9999.pdf"
+  ],
+  "engines": [
+    {
+      "code": "B38",
+      "family": "BMW modular B-series petrol (Bx8: B38/B46/B48 share design)",
+      "displacement_l": 1.5,
+      "displacement_cc": 1499,
+      "cylinders": 3,
+      "fuel": "petrol",
+      "valvetronic": true,
+      "injection": "gasoline direct injection (solenoid, central), single turbo, electric wastegate",
+      "years": "2014-present (1.5 L); B38A15M1 'TU' from 2018",
+      "common_models": [
+        "F40 118i (2019+)",
+        "F45/F46 218i",
+        "F48 X1 sDrive18i",
+        "F39 X2 sDrive18i",
+        "F20/F21 118i LCI",
+        "MINI Cooper F55/F56/F57/F60",
+        "i8 (B38K15T0)"
+      ],
+      "variants_note": "Your F40 118i = B38A15M1 (TU generation). Gen-1 (B38A15M0, F48/F45 2014-2018) numbers below come from the BMW B46/B38 training manual.",
+      "values": {
+        "valvetronic": {
+          "value": true,
+          "note": "Valve gear table in BMW 'B46 Engine' manual (covers B38+B46 as 'Bx8'): Double VANOS + Valvetronic (4th gen). unixnerd confirms 'all the engines have Valvetronic and double VANOS'. Note: Wikipedia B38 article does not mention Valvetronic.",
+          "sources": [
+            "https://archive.org/download/BMWTechnicalTrainingDocuments/ST1508%20F48%20Complete%20Vehicle/02_B46%20Engine.pdf",
+            "https://www.unixnerd.co.uk/b38.html"
+          ],
+          "confidence": "high"
+        },
+        "map_idle": {
+          "unit": "kPa abs",
+          "qualitative": "near_baro",
+          "note": "Valvetronic (throttle-free load control): the throttle stays nearly open and is only slightly closed to create a small vacuum for crankcase ventilation/purge. Expect MAP at warm idle close to barometric pressure (well above the ~30-40 kPa of a throttled engine). No published numeric MAP value found -> app should compare MAP with BARO (PID 0x33) instead of a fixed kPa.",
+          "sources": [
+            "https://archive.org/download/BMWTechnicalTrainingDocuments/ST1508%20F48%20Complete%20Vehicle/02_B46%20Engine.pdf",
+            "https://archive.org/download/BMWTechnicalTrainingDocuments/ST055%20Engine%20Electronics/07_VALVETRONIC.pdf"
+          ],
+          "confidence": "high"
+        },
+        "maf_idle": {
+          "min": 1.5,
+          "max": 3.0,
+          "unit": "g/s",
+          "note": "No BMW-published idle MAF. Diagnostic rule of thumb: warm-idle MAF in g/s ~ displacement in litres (x1-2), varies with A/C and electrical load. Use only as a coarse plausibility window; judge together with fuel trims.",
+          "sources": [
+            "https://diag.net/discussion/s5aqz11sjkdja9bk2auofzlukg"
+          ],
+          "confidence": "low"
+        },
+        "fuel_rail_pressure_max_gen1": {
+          "max": 200,
+          "unit": "bar",
+          "relief_valve_bar": 245,
+          "note": "Gen-1 Bx8 (B38/B46): 'maximum pressure in the rail is 200 bar'; HP pump relief valve opens at 245 bar.",
+          "sources": [
+            "https://archive.org/download/BMWTechnicalTrainingDocuments/ST1508%20F48%20Complete%20Vehicle/02_B46%20Engine.pdf"
+          ],
+          "confidence": "high"
+        },
+        "fuel_rail_pressure_max_tu": {
+          "max": 350,
+          "unit": "bar",
+          "note": "B-series petrol update announced 2016 (TU engines, incl. B38A15M1 in F40) raised injection pressure to up to 350 bar. Only press/secondary sources; not confirmed per engine code. SAE J1979 PID 0x23 (rail gauge) max 655,350 kPa covers this.",
+          "sources": [
+            "https://www.carsales.com.au/editorial/details/bmw-reveals-new-engine-family-103321",
+            "https://www.carlist.my/news/bmw-details-further-enhancements-to-b-series-engine-family-61230/61230/",
+            "https://www.press.bmwgroup.com/usa/article/detail/T0285572EN_US/the-all-new-2019-bmw-3-series"
+          ],
+          "confidence": "medium"
+        },
+        "fuel_low_pressure": {
+          "min": 5,
+          "max": 6.5,
+          "unit": "bar",
+          "note": "Electric fuel pump supply ~5 bar (i8 B38 manual: 'about 5 bar, regulated via pressure-limiting valve'); Bx8 manual: max low pressure 6.5 bar (emergency mode with quantity control valve unpowered).",
+          "sources": [
+            "https://archive.org/download/BMWTechnicalTrainingDocuments/ST1408%20I12%20Complete%20Vehicle%20_/I8.pdf",
+            "https://archive.org/download/BMWTechnicalTrainingDocuments/ST1508%20F48%20Complete%20Vehicle/02_B46%20Engine.pdf"
+          ],
+          "confidence": "high"
+        },
+        "fuel_rail_pressure_idle": {
+          "note": "Not published. DME sets rail pressure from load/speed map; N55 manual states 200 bar is only needed at high load/low rpm, so idle is far below max. Compare 'actual' vs commanded rather than a fixed number.",
+          "sources": [
+            "https://archive.org/download/BMWTechnicalTrainingDocuments/ST916%20N55%20Engine/N55_Engine_web.pdf"
+          ],
+          "confidence": "low"
+        },
+        "coolant_temp_warm": {
+          "min": 80,
+          "max": 109,
+          "unit": "°C",
+          "note": "Bx8 uses a DME map-controlled thermostat (confirmed) but the manual gives no targets. Range taken by analogy from N20 map-thermostat targets (80 high-load ... 109 economy). Expect 95-109 °C on light-load driving; values >112-115 °C warrant a look.",
+          "sources": [
+            "https://archive.org/download/BMWTechnicalTrainingDocuments/ST1508%20F48%20Complete%20Vehicle/02_B46%20Engine.pdf",
+            "https://archive.org/download/BMWTechnicalTrainingDocuments/ST1111%20N20%20Engine/N20%20Engine.pdf"
+          ],
+          "confidence": "low"
+        },
+        "boost_max": {
+          "max": 1.5,
+          "unit": "bar (reference not stated)",
+          "note": "Only published figure is for the i8 B38K15T0 ('charging pressure of up to 1.5 bar'); manual doesn't say gauge or absolute. Not representative for 118i (lower output). OBD PID 0x0B MAP is absolute and capped at 255 kPa.",
+          "sources": [
+            "https://archive.org/download/BMWTechnicalTrainingDocuments/ST1408%20I12%20Complete%20Vehicle%20_/I8.pdf"
+          ],
+          "confidence": "low"
+        },
+        "fuel_trim_notes": {
+          "note": "BMW SI B11 07 17 (B38T/B46O in F48 X1, i8): fault 118002 'mixture too rich' in winter / short trips - fuel-laden crankcase vapours from cold oil enter the intake; DME mixture adaptation (multiplicative factor, NOT OBD STFT/LTFT %) at warm idle 'significantly below 1.0' = rich. Fix per BMW: oil change + DME software. Expect negative trims on short-trip cars in winter.",
+          "sources": [
+            "https://static.nhtsa.gov/odi/tsbs/2017/MC-10136709-9999.pdf",
+            "https://static.nhtsa.gov/odi/tsbs/2017/MC-10146626-9999.pdf"
+          ],
+          "confidence": "high"
+        }
+      }
+    },
+    {
+      "code": "B48",
+      "family": "BMW modular B-series petrol (Bx8)",
+      "displacement_l": 2.0,
+      "displacement_cc": 1998,
+      "cylinders": 4,
+      "fuel": "petrol",
+      "valvetronic": true,
+      "injection": "gasoline direct injection; gen-1 Bosch HDEV5 200 bar, B48TU (2018+) Bosch HDEV6/HDP6 350 bar",
+      "years": "2014-present; TU from 2018",
+      "common_models": [
+        "F40 120i/128ti",
+        "G20 320i/330i",
+        "F30 320i/330i LCI",
+        "F48 X1 xDrive20i/25i",
+        "G29 Z4 sDrive20i/30i",
+        "MINI Cooper S/JCW"
+      ],
+      "values": {
+        "valvetronic": {
+          "value": true,
+          "note": "Wikipedia: variable valve lift (Valvetronic) + Double VANOS; B46 (US-market twin) manual: Valvetronic Yes.",
+          "sources": [
+            "https://en.wikipedia.org/wiki/BMW_B48",
+            "https://archive.org/download/BMWTechnicalTrainingDocuments/ST1508%20F48%20Complete%20Vehicle/02_B46%20Engine.pdf"
+          ],
+          "confidence": "high"
+        },
+        "map_idle": {
+          "unit": "kPa abs",
+          "qualitative": "near_baro",
+          "note": "Valvetronic (throttle-free load control): the throttle stays nearly open and is only slightly closed to create a small vacuum for crankcase ventilation/purge. Expect MAP at warm idle close to barometric pressure (well above the ~30-40 kPa of a throttled engine). No published numeric MAP value found -> app should compare MAP with BARO (PID 0x33) instead of a fixed kPa.",
+          "sources": [
+            "https://archive.org/download/BMWTechnicalTrainingDocuments/ST1508%20F48%20Complete%20Vehicle/02_B46%20Engine.pdf",
+            "https://archive.org/download/BMWTechnicalTrainingDocuments/ST055%20Engine%20Electronics/07_VALVETRONIC.pdf"
+          ],
+          "confidence": "high"
+        },
+        "maf_idle": {
+          "min": 2.0,
+          "max": 4.0,
+          "unit": "g/s",
+          "note": "No BMW-published idle MAF. Diagnostic rule of thumb: warm-idle MAF in g/s ~ displacement in litres (x1-2), varies with A/C and electrical load. Use only as a coarse plausibility window; judge together with fuel trims.",
+          "sources": [
+            "https://diag.net/discussion/s5aqz11sjkdja9bk2auofzlukg"
+          ],
+          "confidence": "low"
+        },
+        "fuel_rail_pressure_max_gen1": {
+          "max": 200,
+          "unit": "bar",
+          "note": "Gen-1: Bosch HDEV5 200 bar (Wikipedia); B46 (same Bx8 base) manual: 200 bar max, 245 bar relief.",
+          "sources": [
+            "https://en.wikipedia.org/wiki/BMW_B48",
+            "https://archive.org/download/BMWTechnicalTrainingDocuments/ST1508%20F48%20Complete%20Vehicle/02_B46%20Engine.pdf"
+          ],
+          "confidence": "high"
+        },
+        "fuel_rail_pressure_max_tu": {
+          "max": 350,
+          "unit": "bar",
+          "note": "B48TU (2018+): HDEV6/HDP6 350 bar (Wikipedia). BMW G20 press kit: new pump 'maximum pressure of 350 bar compared with the 200 bar of the previous version'.",
+          "sources": [
+            "https://en.wikipedia.org/wiki/BMW_B48",
+            "https://www.press.bmwgroup.com/usa/article/detail/T0285572EN_US/the-all-new-2019-bmw-3-series"
+          ],
+          "confidence": "high"
+        },
+        "fuel_low_pressure": {
+          "min": 5,
+          "max": 6.5,
+          "unit": "bar",
+          "note": "Bx8 manual: max low pressure 6.5 bar; electric pump supply ~5 bar on Bx8/N55.",
+          "sources": [
+            "https://archive.org/download/BMWTechnicalTrainingDocuments/ST1508%20F48%20Complete%20Vehicle/02_B46%20Engine.pdf",
+            "https://archive.org/download/BMWTechnicalTrainingDocuments/ST916%20N55%20Engine/N55_Engine_web.pdf"
+          ],
+          "confidence": "medium"
+        },
+        "coolant_temp_warm": {
+          "min": 80,
+          "max": 109,
+          "unit": "°C",
+          "note": "Map-controlled thermostat (Bx8 manual). Numeric targets by analogy with N20 (80-109 °C); B48TU adds split head/block cooling (Wikipedia). Not a BMW-published B48 value.",
+          "sources": [
+            "https://archive.org/download/BMWTechnicalTrainingDocuments/ST1508%20F48%20Complete%20Vehicle/02_B46%20Engine.pdf",
+            "https://archive.org/download/BMWTechnicalTrainingDocuments/ST1111%20N20%20Engine/N20%20Engine.pdf",
+            "https://en.wikipedia.org/wiki/BMW_B48"
+          ],
+          "confidence": "low"
+        },
+        "fuel_trim_notes": {
+          "note": "B38/B46 bulletin 118002 (rich in winter from fuel-diluted crankcase vapours) applies to the shared Bx8 crankcase-ventilation design; B48 not listed in the bulletin, so treat as likely, not confirmed.",
+          "sources": [
+            "https://static.nhtsa.gov/odi/tsbs/2017/MC-10136709-9999.pdf",
+            "https://static.nhtsa.gov/odi/tsbs/2017/MC-10146626-9999.pdf"
+          ],
+          "confidence": "low"
+        }
+      }
+    },
+    {
+      "code": "B58",
+      "family": "BMW modular B-series petrol",
+      "displacement_l": 3.0,
+      "displacement_cc": 2998,
+      "cylinders": 6,
+      "fuel": "petrol",
+      "valvetronic": true,
+      "injection": "GDI; gen-1 Bosch HDEV5.2 200 bar; B58TU (2018+) 350 bar; single twin-scroll turbo, electric wastegate",
+      "years": "2015-present; TU from late 2018",
+      "common_models": [
+        "F30 340i",
+        "F22 M240i",
+        "G20 M340i",
+        "G30 540i",
+        "G05 X5 40i",
+        "G29 Z4 M40i",
+        "Toyota Supra A90"
+      ],
+      "values": {
+        "valvetronic": {
+          "value": true,
+          "note": "BMW B58 manual: Valvetronic 4th gen, 'throttle-free load control... throttle valve only used to stabilize... and ensure a slight vacuum for engine ventilation'.",
+          "sources": [
+            "https://archive.org/download/BMWTechnicalTrainingDocuments/ST1505%20B58%20Engine/B58%20Engine.pdf"
+          ],
+          "confidence": "high"
+        },
+        "map_idle": {
+          "unit": "kPa abs",
+          "qualitative": "near_baro",
+          "note": "Valvetronic (throttle-free load control): the throttle stays nearly open and is only slightly closed to create a small vacuum for crankcase ventilation/purge. Expect MAP at warm idle close to barometric pressure (well above the ~30-40 kPa of a throttled engine). No published numeric MAP value found -> app should compare MAP with BARO (PID 0x33) instead of a fixed kPa.",
+          "sources": [
+            "https://archive.org/download/BMWTechnicalTrainingDocuments/ST1505%20B58%20Engine/B58%20Engine.pdf",
+            "https://archive.org/download/BMWTechnicalTrainingDocuments/ST055%20Engine%20Electronics/07_VALVETRONIC.pdf"
+          ],
+          "confidence": "high"
+        },
+        "maf_idle": {
+          "min": 3.0,
+          "max": 6.0,
+          "unit": "g/s",
+          "note": "No BMW-published idle MAF. Diagnostic rule of thumb: warm-idle MAF in g/s ~ displacement in litres (x1-2), varies with A/C and electrical load. Use only as a coarse plausibility window; judge together with fuel trims.",
+          "sources": [
+            "https://diag.net/discussion/s5aqz11sjkdja9bk2auofzlukg"
+          ],
+          "confidence": "low"
+        },
+        "fuel_rail_pressure_max_gen1": {
+          "max": 200,
+          "unit": "bar",
+          "note": "B58 manual: Bosch HDEV 5.2 injector, '2 = maximum fuel injection pressure of 200 bar'.",
+          "sources": [
+            "https://archive.org/download/BMWTechnicalTrainingDocuments/ST1505%20B58%20Engine/B58%20Engine.pdf"
+          ],
+          "confidence": "high"
+        },
+        "fuel_rail_pressure_max_tu": {
+          "max": 350,
+          "unit": "bar",
+          "note": "B58TU: 'new fuel system that operates at an injection pressure of up to 350 bar' (Aachen Colloquium 2018).",
+          "sources": [
+            "https://www.bmwblog.com/2018/10/31/bmw-b58-tu1-technical-updates-bring-388-horsepower",
+            "https://en.wikipedia.org/wiki/BMW_B58"
+          ],
+          "confidence": "high"
+        },
+        "coolant_temp_warm": {
+          "unit": "°C",
+          "min": 80,
+          "max": 112,
+          "note": "B58 replaces the thermostat with an electric heat management module (rotary valve) using coolant + cylinder-head component temperature sensor; BMW publishes no target numbers. Use generic 80-112 °C plausibility only.",
+          "sources": [
+            "https://archive.org/download/BMWTechnicalTrainingDocuments/ST1505%20B58%20Engine/B58%20Engine.pdf"
+          ],
+          "confidence": "low"
+        },
+        "boost_wot_highrpm_stock": {
+          "max": 10.5,
+          "unit": "psi gauge",
+          "note": "One owner's stock 340i log at 6500 rpm WOT (tapered value, NOT peak). Midrange peak is higher; tuner guides say stock turbo can exceed 22 psi midrange when tuned. Treat as anecdotal.",
+          "sources": [
+            "https://f30.bimmerpost.com/forums/showthread.php?p=25202063",
+            "https://bootmod3.atlassian.net/wiki/spaces/BCS/pages/3829268486/bootmod3+Tuning+Guide+-+MG1+PPC+Aurix"
+          ],
+          "confidence": "low"
+        },
+        "fuel_trim_notes": {
+          "note": "Known failure: PCV/oil-separator diaphragm in valve cover tears -> unmetered air, idle whistle, lean trims/MIL. Vendor descriptions only.",
+          "sources": [
+            "https://www.turnermotorsport.com/BMW-G32-640ixDrive/c-1135-bmw-oil-separation-breather-system/m-151-genuine-bmw"
+          ],
+          "confidence": "medium"
+        }
+      }
+    },
+    {
+      "code": "S58",
+      "family": "BMW M (B58-derived)",
+      "displacement_l": 3.0,
+      "displacement_cc": 2993,
+      "cylinders": 6,
+      "fuel": "petrol",
+      "valvetronic": true,
+      "injection": "GDI 350 bar, two mono-scroll turbos, electric wastegates",
+      "years": "2019-present",
+      "common_models": [
+        "F97/F98 X3 M/X4 M",
+        "G80/G82 M3/M4",
+        "G87 M2"
+      ],
+      "values": {
+        "valvetronic": {
+          "value": true,
+          "note": "Wikipedia S58: variable valve lift (Valvetronic) + VVT.",
+          "sources": [
+            "https://en.wikipedia.org/wiki/BMW_S58"
+          ],
+          "confidence": "medium"
+        },
+        "map_idle": {
+          "unit": "kPa abs",
+          "qualitative": "near_baro",
+          "note": "Valvetronic (throttle-free load control): the throttle stays nearly open and is only slightly closed to create a small vacuum for crankcase ventilation/purge. Expect MAP at warm idle close to barometric pressure (well above the ~30-40 kPa of a throttled engine). No published numeric MAP value found -> app should compare MAP with BARO (PID 0x33) instead of a fixed kPa.",
+          "sources": [
+            "https://en.wikipedia.org/wiki/BMW_S58",
+            "https://archive.org/download/BMWTechnicalTrainingDocuments/ST055%20Engine%20Electronics/07_VALVETRONIC.pdf"
+          ],
+          "confidence": "medium"
+        },
+        "maf_idle": {
+          "min": 3.0,
+          "max": 6.0,
+          "unit": "g/s",
+          "note": "No BMW-published idle MAF. Diagnostic rule of thumb: warm-idle MAF in g/s ~ displacement in litres (x1-2), varies with A/C and electrical load. Use only as a coarse plausibility window; judge together with fuel trims.",
+          "sources": [
+            "https://diag.net/discussion/s5aqz11sjkdja9bk2auofzlukg"
+          ],
+          "confidence": "low"
+        },
+        "fuel_rail_pressure_max": {
+          "max": 350,
+          "unit": "bar",
+          "note": "'raises maximum injection pressure from 200 bar to 350 bar'.",
+          "sources": [
+            "https://www.bmwblog.com/2019/02/12/see-the-new-bmw-m-engine-the-s58/"
+          ],
+          "confidence": "high"
+        },
+        "boost_max": {
+          "min": 18,
+          "max": 20,
+          "unit": "psi gauge",
+          "note": "Third-party guide (not BMW). ~1.24-1.38 bar gauge -> ~225-240 kPa abs at sea level; close to the 255 kPa ceiling of OBD PID 0x0B.",
+          "sources": [
+            "https://bavmods.com/blogs/news/bmw-s58-engine-engineering-upgrades-explained-cooling-system-twin-turbochargers-oil-supply-and-more"
+          ],
+          "confidence": "low"
+        }
+      }
+    },
+    {
+      "code": "N20",
+      "family": "BMW N-series petrol (TVDI)",
+      "displacement_l": 2.0,
+      "displacement_cc": 1997,
+      "cylinders": 4,
+      "fuel": "petrol",
+      "valvetronic": true,
+      "injection": "GDI, Bosch HDEV5.2 solenoid injectors up to 200 bar, twin-scroll turbo, vacuum wastegate (later electric)",
+      "years": "2011-2017",
+      "common_models": [
+        "F20/F21 125i",
+        "F30 320i/328i",
+        "F10 520i/528i",
+        "E84 X1 xDrive28i",
+        "F25 X3 xDrive20i/28i",
+        "E89 Z4 sDrive20i/28i"
+      ],
+      "values": {
+        "valvetronic": {
+          "value": true,
+          "note": "BMW N20 manual: 3rd-gen Valvetronic, 'Turbocharged Valvetronic Direct Injection'.",
+          "sources": [
+            "https://archive.org/download/BMWTechnicalTrainingDocuments/ST1111%20N20%20Engine/N20%20Engine.pdf",
+            "https://bmwtechinfo.bmwgroup.com/tech_training_manual/ST1111%20N20%20Engine.pdf"
+          ],
+          "confidence": "high"
+        },
+        "map_idle": {
+          "unit": "kPa abs",
+          "qualitative": "near_baro",
+          "note": "Valvetronic (throttle-free load control): the throttle stays nearly open and is only slightly closed to create a small vacuum for crankcase ventilation/purge. Expect MAP at warm idle close to barometric pressure (well above the ~30-40 kPa of a throttled engine). No published numeric MAP value found -> app should compare MAP with BARO (PID 0x33) instead of a fixed kPa.",
+          "sources": [
+            "https://archive.org/download/BMWTechnicalTrainingDocuments/ST1111%20N20%20Engine/N20%20Engine.pdf",
+            "https://archive.org/download/BMWTechnicalTrainingDocuments/ST055%20Engine%20Electronics/07_VALVETRONIC.pdf"
+          ],
+          "confidence": "high"
+        },
+        "maf_idle": {
+          "min": 2,
+          "max": 7,
+          "unit": "g/s",
+          "note": "Parts-retailer diagnostic guide for N20 P0102: 2-7 g/s at stable warm idle. Not BMW data.",
+          "sources": [
+            "https://www.go-parts.com/garage/obd-p0102-bmw-3-series-2012-2019-n20-2-0l"
+          ],
+          "confidence": "low"
+        },
+        "fuel_rail_pressure_max": {
+          "max": 200,
+          "unit": "bar",
+          "note": "N20 manual sec. 7.4: HDEV5.2 'configured for a system pressure of up to 200 bar'.",
+          "sources": [
+            "https://archive.org/download/BMWTechnicalTrainingDocuments/ST1111%20N20%20Engine/N20%20Engine.pdf"
+          ],
+          "confidence": "high"
+        },
+        "coolant_temp_warm": {
+          "min": 80,
+          "max": 109,
+          "unit": "°C",
+          "targets": {
+            "economy": 109,
+            "normal": 106,
+            "high": 95,
+            "high_heated_thermostat": 80
+          },
+          "note": "N20 manual 4.2.2: map thermostat opens 97±2 °C, fully open 109 °C. DME targets: 109 economy, 106 normal, 95 high, 80 high+thermostat heated.",
+          "sources": [
+            "https://archive.org/download/BMWTechnicalTrainingDocuments/ST1111%20N20%20Engine/N20%20Engine.pdf"
+          ],
+          "confidence": "high"
+        },
+        "coolant_temp_protection": {
+          "min": 117,
+          "max": 122,
+          "unit": "°C",
+          "note": "Protection thresholds, not normal: component protection from 117 °C (A/C & power reduced), emergency from 122 °C (power up to ~90% reduced).",
+          "sources": [
+            "https://archive.org/download/BMWTechnicalTrainingDocuments/ST1111%20N20%20Engine/N20%20Engine.pdf"
+          ],
+          "confidence": "high"
+        },
+        "oil_temp_protection": {
+          "min": 143,
+          "max": 151,
+          "unit": "°C",
+          "note": "Oil temperature at main-gallery sensor: component protection from 143 °C, emergency from 151 °C. Normal oil temp is below these (not published).",
+          "sources": [
+            "https://archive.org/download/BMWTechnicalTrainingDocuments/ST1111%20N20%20Engine/N20%20Engine.pdf"
+          ],
+          "confidence": "high"
+        },
+        "oil_pressure": {
+          "min": 1.5,
+          "max": 4.5,
+          "unit": "bar",
+          "note": "Map-controlled oil pump: 1.5-4.5 bar in map mode (not an SAE J1979 PID; BMW-specific).",
+          "sources": [
+            "https://archive.org/download/BMWTechnicalTrainingDocuments/ST1111%20N20%20Engine/N20%20Engine.pdf"
+          ],
+          "confidence": "high"
+        }
+      }
+    },
+    {
+      "code": "N13",
+      "family": "BMW/PSA 'Prince' 1.6 turbo",
+      "displacement_l": 1.6,
+      "displacement_cc": 1598,
+      "cylinders": 4,
+      "fuel": "petrol",
+      "valvetronic": true,
+      "injection": "GDI (solenoid HPI), twin-scroll turbo",
+      "years": "2011-2016",
+      "common_models": [
+        "F20/F21 114i/116i/118i",
+        "F30 316i"
+      ],
+      "values": {
+        "valvetronic": {
+          "value": true,
+          "note": "unixnerd: 'Valvetronic + VANOS'; twin-scroll turbo, electric coolant pump.",
+          "sources": [
+            "https://www.unixnerd.co.uk/n13.html",
+            "https://australiancar.reviews/?p=52526"
+          ],
+          "confidence": "medium"
+        },
+        "map_idle": {
+          "unit": "kPa abs",
+          "qualitative": "near_baro",
+          "note": "Valvetronic (throttle-free load control): the throttle stays nearly open and is only slightly closed to create a small vacuum for crankcase ventilation/purge. Expect MAP at warm idle close to barometric pressure (well above the ~30-40 kPa of a throttled engine). No published numeric MAP value found -> app should compare MAP with BARO (PID 0x33) instead of a fixed kPa.",
+          "sources": [
+            "https://www.unixnerd.co.uk/n13.html",
+            "https://archive.org/download/BMWTechnicalTrainingDocuments/ST055%20Engine%20Electronics/07_VALVETRONIC.pdf"
+          ],
+          "confidence": "medium"
+        },
+        "maf_idle": {
+          "min": 1.6,
+          "max": 3.2,
+          "unit": "g/s",
+          "note": "No BMW-published idle MAF. Diagnostic rule of thumb: warm-idle MAF in g/s ~ displacement in litres (x1-2), varies with A/C and electrical load. Use only as a coarse plausibility window; judge together with fuel trims.",
+          "sources": [
+            "https://diag.net/discussion/s5aqz11sjkdja9bk2auofzlukg"
+          ],
+          "confidence": "low"
+        }
+      }
+    },
+    {
+      "code": "N55",
+      "family": "BMW N-series petrol (TVDI)",
+      "displacement_l": 3.0,
+      "displacement_cc": 2979,
+      "cylinders": 6,
+      "fuel": "petrol",
+      "valvetronic": true,
+      "injection": "GDI, HDEV5.2 solenoid up to 200 bar, single twin-scroll turbo",
+      "years": "2009-2018",
+      "common_models": [
+        "F30 335i",
+        "F22 M235i",
+        "F20 M135i",
+        "F10 535i",
+        "F25 X3 35i",
+        "E90 335i LCI"
+      ],
+      "values": {
+        "valvetronic": {
+          "value": true,
+          "note": "N55 manual: 'first BMW turbo engine to incorporate Valvetronic' (Valvetronic III).",
+          "sources": [
+            "https://archive.org/download/BMWTechnicalTrainingDocuments/ST916%20N55%20Engine/N55_Engine_web.pdf"
+          ],
+          "confidence": "high"
+        },
+        "map_idle": {
+          "unit": "kPa abs",
+          "qualitative": "near_baro",
+          "note": "Valvetronic (throttle-free load control): the throttle stays nearly open and is only slightly closed to create a small vacuum for crankcase ventilation/purge. Expect MAP at warm idle close to barometric pressure (well above the ~30-40 kPa of a throttled engine). No published numeric MAP value found -> app should compare MAP with BARO (PID 0x33) instead of a fixed kPa.",
+          "sources": [
+            "https://archive.org/download/BMWTechnicalTrainingDocuments/ST916%20N55%20Engine/N55_Engine_web.pdf",
+            "https://archive.org/download/BMWTechnicalTrainingDocuments/ST055%20Engine%20Electronics/07_VALVETRONIC.pdf"
+          ],
+          "confidence": "high"
+        },
+        "maf_idle": {
+          "min": 3.9,
+          "max": 6,
+          "unit": "g/s",
+          "note": "Technician on diag.net: 14-15 kg/h (=3.9-4.2 g/s); parts guide: 4-6 g/s. Not BMW data.",
+          "sources": [
+            "https://www.go-parts.com/garage/obd-p0101-bmw-5-series-2011-2017-n55-3-0l",
+            "https://diag.net/discussion/ssviiqvfibj3iwalxl3jmfzgck"
+          ],
+          "confidence": "low"
+        },
+        "fuel_rail_pressure_max": {
+          "max": 200,
+          "unit": "bar",
+          "note": "N55 manual: injectors 'operate at a system pressure of up to 200 bar'; 'A pressure of 200 bar is only required at high load and low engine speed.'",
+          "sources": [
+            "https://archive.org/download/BMWTechnicalTrainingDocuments/ST916%20N55%20Engine/N55_Engine_web.pdf"
+          ],
+          "confidence": "high"
+        },
+        "fuel_low_pressure": {
+          "min": 5,
+          "max": 5,
+          "unit": "bar",
+          "note": "'primary pressure of 5 bar by the electric fuel pump'.",
+          "sources": [
+            "https://archive.org/download/BMWTechnicalTrainingDocuments/ST916%20N55%20Engine/N55_Engine_web.pdf"
+          ],
+          "confidence": "high"
+        },
+        "coolant_temp_warm": {
+          "min": 90,
+          "max": 108,
+          "unit": "°C",
+          "targets": {
+            "economy": 108,
+            "normal": 104,
+            "high": 95,
+            "high_heated_thermostat": 90
+          },
+          "note": "DME targets: 108 economy, 104 normal, 95 high, 90 high+map thermostat.",
+          "sources": [
+            "https://archive.org/download/BMWTechnicalTrainingDocuments/ST916%20N55%20Engine/N55_Engine_web.pdf"
+          ],
+          "confidence": "high"
+        },
+        "coolant_temp_protection": {
+          "min": 117,
+          "max": 129,
+          "unit": "°C",
+          "note": "Component protection 117-124 °C, emergency 125-129 °C. Thresholds, not normal.",
+          "sources": [
+            "https://archive.org/download/BMWTechnicalTrainingDocuments/ST916%20N55%20Engine/N55_Engine_web.pdf"
+          ],
+          "confidence": "high"
+        },
+        "oil_temp_protection": {
+          "min": 150,
+          "max": 163,
+          "unit": "°C",
+          "note": "Component protection 150-157 °C, emergency 158-163 °C. Thresholds, not normal.",
+          "sources": [
+            "https://archive.org/download/BMWTechnicalTrainingDocuments/ST916%20N55%20Engine/N55_Engine_web.pdf"
+          ],
+          "confidence": "high"
+        },
+        "boost_max": {
+          "note": "No reliable stock figure found; tuner (Cobb) Stage-1 targets 10-12.5 psi peak, which implies stock is lower/similar. Omit a stock number.",
+          "sources": [
+            "https://cobbtuning.atlassian.net/wiki/spaces/PRS/pages/67207302/Map+Notes+for+BMW+N55"
+          ],
+          "confidence": "low"
+        }
+      }
+    },
+    {
+      "code": "B46",
+      "family": "BMW modular B-series petrol (Bx8; US/ULEV twin of B48)",
+      "displacement_l": 2.0,
+      "displacement_cc": 1998,
+      "cylinders": 4,
+      "fuel": "petrol",
+      "valvetronic": true,
+      "injection": "GDI 200 bar (gen-1), twin-scroll turbo, electric wastegate",
+      "years": "2015-",
+      "common_models": [
+        "F48 X1 xDrive28i (US)",
+        "G01 X3 xDrive30i (US)",
+        "F30 330i (US)"
+      ],
+      "values": {
+        "valvetronic": {
+          "value": true,
+          "note": "B46 manual technology table: Valvetronic Yes, Double VANOS Yes (4th gen Valvetronic).",
+          "sources": [
+            "https://archive.org/download/BMWTechnicalTrainingDocuments/ST1508%20F48%20Complete%20Vehicle/02_B46%20Engine.pdf"
+          ],
+          "confidence": "high"
+        },
+        "map_idle": {
+          "unit": "kPa abs",
+          "qualitative": "near_baro",
+          "note": "Valvetronic (throttle-free load control): the throttle stays nearly open and is only slightly closed to create a small vacuum for crankcase ventilation/purge. Expect MAP at warm idle close to barometric pressure (well above the ~30-40 kPa of a throttled engine). No published numeric MAP value found -> app should compare MAP with BARO (PID 0x33) instead of a fixed kPa.",
+          "sources": [
+            "https://archive.org/download/BMWTechnicalTrainingDocuments/ST1508%20F48%20Complete%20Vehicle/02_B46%20Engine.pdf",
+            "https://archive.org/download/BMWTechnicalTrainingDocuments/ST055%20Engine%20Electronics/07_VALVETRONIC.pdf"
+          ],
+          "confidence": "high"
+        },
+        "maf_idle": {
+          "min": 2.0,
+          "max": 4.0,
+          "unit": "g/s",
+          "note": "No BMW-published idle MAF. Diagnostic rule of thumb: warm-idle MAF in g/s ~ displacement in litres (x1-2), varies with A/C and electrical load. Use only as a coarse plausibility window; judge together with fuel trims.",
+          "sources": [
+            "https://diag.net/discussion/s5aqz11sjkdja9bk2auofzlukg"
+          ],
+          "confidence": "low"
+        },
+        "fuel_rail_pressure_max": {
+          "max": 200,
+          "unit": "bar",
+          "relief_valve_bar": 245,
+          "note": "'maximum pressure in the rail is 200 bar'; relief valve 245 bar. Later B46 TU likely 350 bar like B48TU (not confirmed).",
+          "sources": [
+            "https://archive.org/download/BMWTechnicalTrainingDocuments/ST1508%20F48%20Complete%20Vehicle/02_B46%20Engine.pdf"
+          ],
+          "confidence": "high"
+        },
+        "fuel_low_pressure": {
+          "max": 6.5,
+          "unit": "bar",
+          "note": "Max fuel low pressure 6.5 bar (emergency mode).",
+          "sources": [
+            "https://archive.org/download/BMWTechnicalTrainingDocuments/ST1508%20F48%20Complete%20Vehicle/02_B46%20Engine.pdf"
+          ],
+          "confidence": "high"
+        },
+        "coolant_temp_warm": {
+          "min": 80,
+          "max": 109,
+          "unit": "°C",
+          "note": "Map-controlled thermostat (B46 manual) - targets by analogy with N20.",
+          "sources": [
+            "https://archive.org/download/BMWTechnicalTrainingDocuments/ST1508%20F48%20Complete%20Vehicle/02_B46%20Engine.pdf",
+            "https://archive.org/download/BMWTechnicalTrainingDocuments/ST1111%20N20%20Engine/N20%20Engine.pdf"
+          ],
+          "confidence": "low"
+        },
+        "fuel_trim_notes": {
+          "note": "BMW SI B11 07 17 (B38T/B46O in F48 X1, i8): fault 118002 'mixture too rich' in winter / short trips - fuel-laden crankcase vapours from cold oil enter the intake; DME mixture adaptation (multiplicative factor, NOT OBD STFT/LTFT %) at warm idle 'significantly below 1.0' = rich. Fix per BMW: oil change + DME software. Expect negative trims on short-trip cars in winter.",
+          "sources": [
+            "https://static.nhtsa.gov/odi/tsbs/2017/MC-10136709-9999.pdf",
+            "https://static.nhtsa.gov/odi/tsbs/2017/MC-10146626-9999.pdf"
+          ],
+          "confidence": "high"
+        }
+      }
+    },
+    {
+      "code": "B47",
+      "family": "BMW modular B-series diesel",
+      "displacement_l": 2.0,
+      "displacement_cc": 1995,
+      "cylinders": 4,
+      "fuel": "diesel",
+      "valvetronic": false,
+      "injection": "common-rail, VGT turbo (twin-stage on high-output)",
+      "years": "2014-present",
+      "common_models": [
+        "F40 116d/118d/120d",
+        "F30/G20 318d/320d",
+        "G30 520d",
+        "F48 X1 18d/20d/25d"
+      ],
+      "values": {
+        "map_idle": {
+          "unit": "kPa abs",
+          "qualitative": "near_baro",
+          "note": "Diesel: no Valvetronic and no throttling at idle -> MAP ~ baro at idle (generic diesel behaviour; no BMW number).",
+          "sources": [
+            "https://www.unixnerd.co.uk/b47.html"
+          ],
+          "confidence": "low"
+        },
+        "fuel_rail_pressure_max": {
+          "min": 2000,
+          "max": 2500,
+          "unit": "bar",
+          "note": "Early B47 2000 bar; high-output (25d) 2500 bar. 2020 update: up to 2500 bar most four-cyl, 2700 bar strongest four.",
+          "sources": [
+            "https://www.unixnerd.co.uk/b47.html",
+            "https://www.carsales.com.au/editorial/details/bmw-reveals-new-engine-family-103321"
+          ],
+          "confidence": "medium"
+        }
+      }
+    },
+    {
+      "code": "B57",
+      "family": "BMW modular B-series diesel",
+      "displacement_l": 3.0,
+      "displacement_cc": 2993,
+      "cylinders": 6,
+      "fuel": "diesel",
+      "valvetronic": false,
+      "injection": "common-rail piezo, multi-stage turbo",
+      "years": "2015-present",
+      "common_models": [
+        "G30 530d",
+        "G11 730d",
+        "G05 X5 30d",
+        "G20 330d"
+      ],
+      "values": {
+        "fuel_rail_pressure_max": {
+          "max": 2700,
+          "unit": "bar",
+          "note": "2020 update: 'injection pressure achieved reaches a maximum of 2,700 bar'. Earlier B57 ~2000-2500 bar.",
+          "sources": [
+            "https://www.bmwblog.com/2020/05/27/bmw-b57-diesel-engine",
+            "https://www.unixnerd.co.uk/b47.html"
+          ],
+          "confidence": "medium"
+        }
+      }
+    },
+    {
+      "code": "N47",
+      "family": "BMW N-series diesel",
+      "displacement_l": 2.0,
+      "displacement_cc": 1995,
+      "cylinders": 4,
+      "fuel": "diesel",
+      "valvetronic": false,
+      "injection": "common-rail (solenoid 1600 bar low outputs, piezo 1800-2000 bar)",
+      "years": "2007-2015",
+      "common_models": [
+        "E87/F20 118d/120d",
+        "E90/F30 318d/320d",
+        "F10 520d"
+      ],
+      "values": {
+        "fuel_rail_pressure_max": {
+          "min": 1600,
+          "max": 2000,
+          "unit": "bar",
+          "note": "Varies by output: 1600 (solenoid) / 1800 / 2000 bar (piezo). Secondary sources only.",
+          "sources": [
+            "https://en.wikipedia.org/wiki/BMW_N47",
+            "https://www.unixnerd.co.uk/n57.html"
+          ],
+          "confidence": "low"
+        }
+      }
+    },
+    {
+      "code": "N57",
+      "family": "BMW N-series diesel",
+      "displacement_l": 3.0,
+      "displacement_cc": 2993,
+      "cylinders": 6,
+      "fuel": "diesel",
+      "valvetronic": false,
+      "injection": "common-rail; N57TU 1800 bar (pump capable of 2000)",
+      "years": "2008-2018",
+      "common_models": [
+        "E90/F30 330d/335d",
+        "F10 530d/535d",
+        "E70/F15 X5 30d/40d"
+      ],
+      "values": {
+        "fuel_rail_pressure_max": {
+          "max": 1800,
+          "unit": "bar",
+          "note": "N57TU manual: 'Although it is capable of generating a pressure of 2000 bar, the N57TU uses 1800 bar'.",
+          "sources": [
+            "https://archive.org/download/BMWTechnicalTrainingDocuments/ST1306%20N57TU%20Engine/N57TU%20Engine.pdf"
+          ],
+          "confidence": "high"
+        },
+        "boost_sensor_range": {
+          "min": 50,
+          "max": 300,
+          "unit": "kPa abs",
+          "note": "Boost sensor MEASURING RANGE (0.5-3 bar), not the boost target.",
+          "sources": [
+            "https://archive.org/download/BMWTechnicalTrainingDocuments/ST1306%20N57TU%20Engine/N57TU%20Engine.pdf"
+          ],
+          "confidence": "high"
+        }
+      }
+    }
+  ]
+}

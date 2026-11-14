@@ -56,6 +56,19 @@ enum Section: String, CaseIterable, Identifiable {
     @Published private(set) var recorded: [Sample] = []
     @Published private(set) var report: Report?
     @Published private(set) var reportName: String?
+    /// Where the shown engine-check result comes from, and when it was recorded.
+    enum ReportSource { case demo, fresh, file }
+    @Published private(set) var reportSource: ReportSource?
+    @Published private(set) var reportDate: Date?
+    var reportOrigin: String {
+        let when = reportDate.map { " · " + $0.formatted(.dateTime.day().month().hour().minute()) } ?? ""
+        switch reportSource {
+        case .demo: return t("Demo – dane symulowane", "Demo – simulated data")
+        case .fresh: return t("Nowa kontrola", "New check") + when
+        case .file: return t("Wczytany zapis", "Loaded log") + when
+        case nil: return t("nagraj log na ciepłym silniku", "record a log, engine warm")
+        }
+    }
     @Published private(set) var captures: [URL] = Captures.list()
 
     // engine check: get ready -> idle -> 2500 rpm -> result
@@ -82,6 +95,7 @@ enum Section: String, CaseIterable, Identifiable {
         connection = "DEMO"
         report = Analysis.analyze(Car.demoLog())
         reportName = t("demo – log 4 min", "demo – 4 min log")
+        reportSource = .demo; reportDate = nil
         newCheck = false
         await readFaults()
         await firstSnapshot()
@@ -237,6 +251,7 @@ enum Section: String, CaseIterable, Identifiable {
         newCheck = false
         report = Analysis.analyze(recorded)
         reportName = w.url.lastPathComponent
+        reportSource = .fresh; reportDate = Date()
         captures = Captures.list()
     }
 
@@ -244,6 +259,8 @@ enum Section: String, CaseIterable, Identifiable {
         do {
             report = Analysis.analyze(try Captures.readLog(url))
             reportName = url.lastPathComponent
+            reportSource = .file
+            reportDate = (try? url.resourceValues(forKeys: [.contentModificationDateKey]))?.contentModificationDate
             newCheck = false
             section = .engine
         } catch { self.error = "\(error)" }
