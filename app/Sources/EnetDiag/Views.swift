@@ -149,7 +149,7 @@ struct OverviewPage: View {
     @EnvironmentObject var m: Model
     var body: some View {
         if m.connected {
-            ScrollView { Dashboard().padding(24) }
+            ScrollView { Dashboard().padding(28) }
         } else {
             Welcome()
         }
@@ -205,13 +205,14 @@ struct Stat: View {
     var body: some View {
         GroupBox {
             VStack(alignment: .leading, spacing: 6) {
-                Text(value).font(.system(size: 30, weight: .semibold, design: .rounded)).foregroundStyle(color)
+                Text(value).font(.system(size: 38, weight: .semibold, design: .rounded)).foregroundStyle(color)
                     .lineLimit(1).minimumScaleFactor(0.6).contentTransition(.numericText())
-                Text(caption).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                Text(caption).font(.callout).foregroundStyle(.secondary).lineLimit(1)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(12)
         } label: {
-            Label(title, systemImage: symbol)
+            Label(title, systemImage: symbol).font(.headline).padding(.bottom, 2)
         }
     }
 }
@@ -223,8 +224,8 @@ struct Dashboard: View {
         let workshop = m.faults.filter { $0.hint?.severity == .workshop }.count
         let levels = m.report?.findings.map(\.level) ?? []
         let worst: Finding.Level? = m.report == nil ? nil : levels.contains(.problem) ? .problem : levels.contains(.watch) ? .watch : .ok
-        VStack(alignment: .leading, spacing: 18) {
-            Grid(horizontalSpacing: 12, verticalSpacing: 12) {
+        VStack(alignment: .leading, spacing: 24) {
+            Grid(horizontalSpacing: 16, verticalSpacing: 16) {
                 GridRow {
                     Stat(title: t("Błędy", "Faults"), symbol: "exclamationmark.triangle", value: "\(m.faults.count)",
                          caption: t("aktywnych: ", "active: ") + "\(active)", color: active > 0 ? .red : .primary)
@@ -245,15 +246,15 @@ struct Dashboard: View {
             let top = Array(m.faults.sorted { ($0.active ? 0 : 1, $0.hint?.severity == .workshop ? 0 : 1) < ($1.active ? 0 : 1, $1.hint?.severity == .workshop ? 0 : 1) }.prefix(3))
             HStack(alignment: .top, spacing: 12) {
                 GroupBox {
-                    VStack(alignment: .leading, spacing: 12) {
+                    VStack(alignment: .leading, spacing: 16) {
                         if top.isEmpty { Label(t("Brak błędów", "No faults"), systemImage: "checkmark.seal").foregroundStyle(.green) }
                         ForEach(top) { f in
                             HStack(alignment: .top, spacing: 10) {
                                 Image(systemName: f.hint?.severity.symbol ?? "questionmark.circle")
-                                    .foregroundStyle(f.hint?.severity.color ?? .secondary).frame(width: 18)
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(f.hint?.title.text ?? t("Kod bez naszego opisu", "Code without a note of ours")).font(.headline)
-                                    Text("\(f.code) · \(f.unitText) · \(f.statusText)").font(.caption).foregroundStyle(.secondary)
+                                    .font(.title3).foregroundStyle(f.hint?.severity.color ?? .secondary).frame(width: 26)
+                                VStack(alignment: .leading, spacing: 3) {
+                                    Text(f.hint?.title.text ?? t("Kod bez naszego opisu", "Code without a note of ours")).font(.title3.weight(.semibold))
+                                    Text("\(f.code) · \(f.unitText) · \(f.statusText)").font(.callout).foregroundStyle(.secondary)
                                 }
                                 Spacer(minLength: 0)
                             }
@@ -261,23 +262,23 @@ struct Dashboard: View {
                             .onTapGesture { m.section = .faults }
                         }
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading).padding(4)
-                } label: { Label(t("Najważniejsze teraz", "Most Important Now"), systemImage: "flag.fill") }
+                    .frame(maxWidth: .infinity, alignment: .leading).padding(14)
+                } label: { Label(t("Najważniejsze teraz", "Most Important Now"), systemImage: "flag.fill").font(.headline).padding(.bottom, 2) }
                 GroupBox {
-                    VStack(alignment: .leading, spacing: 12) {
+                    VStack(alignment: .leading, spacing: 14) {
                         if let r = m.report {
                             ForEach(r.findings) { f in
-                                Label { Text(f.title.text) } icon: { Image(systemName: f.level.symbol).foregroundStyle(f.level.color) }
+                                Label { Text(f.title.text).font(.title3) } icon: { Image(systemName: f.level.symbol).font(.title3).foregroundStyle(f.level.color) }
                             }
                         } else {
                             Text(t("Nagraj log w Kontroli silnika, a tu pojawi się wynik.", "Record a log in Engine Check and the result shows here."))
                                 .foregroundStyle(.secondary)
                         }
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading).padding(4)
+                    .frame(maxWidth: .infinity, alignment: .leading).padding(14)
                     .contentShape(Rectangle())
                     .onTapGesture { m.section = .engine }
-                } label: { Label(t("Kontrola silnika", "Engine Check"), systemImage: "engine.combustion") }
+                } label: { Label(t("Kontrola silnika", "Engine Check"), systemImage: "engine.combustion").font(.headline).padding(.bottom, 2) }
             }
             if let p = m.probe {
                 GroupBox {
@@ -420,10 +421,10 @@ struct Tile: View {
     let label: String, value: Double?, unit: String, digits: Int
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(label).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+            Text(label).font(.callout).foregroundStyle(.secondary).lineLimit(1)
             HStack(alignment: .firstTextBaseline, spacing: 3) {
                 Text(value.map { String(format: "%.\(digits)f", $0) } ?? "–")
-                    .font(.system(size: 24, weight: .semibold, design: .rounded)).monospacedDigit().contentTransition(.numericText())
+                    .font(.system(size: 28, weight: .semibold, design: .rounded)).monospacedDigit().contentTransition(.numericText())
                 Text(unit).font(.caption).foregroundStyle(.secondary)
             }
         }
@@ -466,8 +467,8 @@ struct LivePage: View {
                                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 150), spacing: 14)], alignment: .leading, spacing: 14) {
                                     ForEach(pids, id: \.key) { p in Tile(label: Pids.label(p), value: last[p.key], unit: p.unit, digits: Self.digits[p.key] ?? 0) }
                                 }
-                                .padding(4)
-                            } label: { Text(Self.groupTitle[g]?.text ?? "") }
+                                .padding(12)
+                            } label: { Text(Self.groupTitle[g]?.text ?? "").font(.headline).padding(.bottom, 2) }
                         }
                     }
                     if !m.misfires.isEmpty {
@@ -534,15 +535,16 @@ struct EnginePage: View {
                     ForEach(r.findings) { f in
                         GroupBox {
                             HStack(alignment: .top, spacing: 12) {
-                                Image(systemName: f.level.symbol).font(.title2).foregroundStyle(f.level.color)
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(f.title.text).font(.headline)
-                                    Text(f.verdict.text)
+                                Image(systemName: f.level.symbol).font(.title).foregroundStyle(f.level.color)
+                                VStack(alignment: .leading, spacing: 6) {
+                                    Text(f.title.text).font(.title3.weight(.semibold))
+                                    Text(f.verdict.text).font(.body)
                                     Text(f.values.sorted { $0.key < $1.key }.map { "\(Self.valueName($0.key)) \(String(format: "%.2f", $0.value))" }.joined(separator: " · "))
                                         .font(.caption.monospacedDigit()).foregroundStyle(.secondary)
                                 }
                                 Spacer()
                             }
+                            .padding(10)
                         }
                     }
                     ForEach(r.notes, id: \.self) { n in Label(n.text, systemImage: "info.circle").font(.callout).foregroundStyle(.secondary) }
