@@ -61,12 +61,12 @@ struct MainToolbar: ToolbarContent {
     var body: some ToolbarContent {
         ToolbarItemGroup(placement: .primaryAction) {
             if m.connected {
-                Button { Task { await m.readFaults() } } label: { Label(t("Odczytaj błędy", "Read Faults"), systemImage: "arrow.clockwise") }
+                Button { Task { await m.readFaults() } } label: { Label(t("Odczytaj błędy", "Read Faults"), systemImage: "arrow.clockwise") }.labelStyle(.titleAndIcon)
                     .help(t("Odczytaj pamięć błędów wszystkich sterowników (⌘R)", "Read every control unit's fault memory (⌘R)"))
-                Button { Task { await m.runProbe() } } label: { Label(t("Pełny odczyt", "Full Read"), systemImage: "doc.text.magnifyingglass") }
+                Button { Task { await m.runProbe() } } label: { Label(t("Pełny odczyt", "Full Read"), systemImage: "doc.text.magnifyingglass") }.labelStyle(.titleAndIcon)
                     .help(t("Wszystko z silnika do pliku", "Everything from the engine to a file"))
             } else {
-                Button { Task { await m.connectDemo() } } label: { Label("Demo", systemImage: "play.rectangle") }
+                Button { Task { await m.connectDemo() } } label: { Label("Demo", systemImage: "play.rectangle") }.labelStyle(.titleAndIcon)
                     .help(t("Symulowane auto", "A simulated car"))
             }
         }
@@ -75,9 +75,9 @@ struct MainToolbar: ToolbarContent {
             if m.busy != nil {
                 ProgressView().controlSize(.small)
             } else if m.connected {
-                Button { Task { await m.disconnect() } } label: { Label(t("Rozłącz", "Disconnect"), systemImage: "eject") }
+                Button { Task { await m.disconnect() } } label: { Label(t("Rozłącz", "Disconnect"), systemImage: "eject") }.labelStyle(.titleAndIcon)
             } else {
-                Button { Task { await m.connect() } } label: { Label(t("Połącz", "Connect"), systemImage: "cable.connector") }
+                Button { Task { await m.connect() } } label: { Label(t("Połącz", "Connect"), systemImage: "cable.connector") }.labelStyle(.titleAndIcon)
                     .buttonStyle(.glassProminent)
                     .help(t("Kabel ENET w gnieździe OBD, zapłon włączony (⌘K)", "ENET cable in the OBD port, ignition on (⌘K)"))
             }
@@ -316,12 +316,12 @@ struct FaultsPage: View {
             }
             .toolbar {
                 ToolbarItemGroup {
-                    Toggle(isOn: $onlyActive) { Label(t("Tylko aktywne", "Active Only"), systemImage: "line.3.horizontal.decrease") }
+                    Toggle(isOn: $onlyActive) { Label(t("Tylko aktywne", "Active Only"), systemImage: "line.3.horizontal.decrease") }.labelStyle(.titleAndIcon)
                         .help(t("Pokaż tylko aktywne błędy", "Show active faults only"))
-                    Button { copy(m.faultsText()) } label: { Label(t("Kopiuj dla AI", "Copy for AI"), systemImage: "sparkles") }
+                    Button { copy(m.faultsText()) } label: { Label(t("Kopiuj dla AI", "Copy for AI"), systemImage: "sparkles") }.labelStyle(.titleAndIcon)
                         .disabled(m.faults.isEmpty)
                         .help(t("Lista błędów do wklejenia asystentowi AI", "The fault list, to paste into your AI assistant"))
-                    Button { inspector.toggle() } label: { Label(t("Szczegóły", "Details"), systemImage: "sidebar.trailing") }
+                    Button { inspector.toggle() } label: { Label(t("Szczegóły", "Details"), systemImage: "sidebar.trailing") }.labelStyle(.titleAndIcon)
                 }
             }
         }
@@ -453,6 +453,7 @@ struct LivePage: View {
                     Button { m.liveOn ? m.stopLive() : m.startLive() } label: {
                         Label(m.liveOn ? t("Zatrzymaj", "Stop") : t("Start", "Start"), systemImage: m.liveOn ? "pause.fill" : "play.fill")
                     }
+                    .labelStyle(.titleAndIcon)
                 }
             }
         }
@@ -527,9 +528,9 @@ struct EnginePage: View {
         .toolbar {
             ToolbarItem {
                 if m.recording == nil {
-                    Button { m.startRecording() } label: { Label(t("Nagrywaj", "Record"), systemImage: "record.circle") }.disabled(!m.connected)
+                    Button { m.startRecording() } label: { Label(t("Nagrywaj", "Record"), systemImage: "record.circle") }.labelStyle(.titleAndIcon).disabled(!m.connected)
                 } else {
-                    Button { m.stopRecording() } label: { Label(t("Zakończ i analizuj", "Stop and Analyse"), systemImage: "stop.fill") }
+                    Button { m.stopRecording() } label: { Label(t("Zakończ i analizuj", "Stop and Analyse"), systemImage: "stop.fill") }.labelStyle(.titleAndIcon)
                 }
             }
         }
@@ -586,8 +587,8 @@ struct CapturesPage: View {
         }
         .toolbar {
             ToolbarItemGroup {
-                Button { m.refreshCaptures() } label: { Label(t("Odśwież", "Refresh"), systemImage: "arrow.clockwise") }
-                Button { NSWorkspace.shared.open(Captures.folder) } label: { Label(t("Pokaż w Finderze", "Show in Finder"), systemImage: "folder") }
+                Button { m.refreshCaptures() } label: { Label(t("Odśwież", "Refresh"), systemImage: "arrow.clockwise") }.labelStyle(.titleAndIcon)
+                Button { NSWorkspace.shared.open(Captures.folder) } label: { Label(t("Pokaż w Finderze", "Show in Finder"), systemImage: "folder") }.labelStyle(.titleAndIcon)
             }
         }
     }
