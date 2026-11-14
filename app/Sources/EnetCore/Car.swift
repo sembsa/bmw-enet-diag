@@ -31,7 +31,7 @@ public struct Probe: Codable, Sendable {
 
 public actor Car {
     let transport: Transport
-    public let connection: String
+    public nonisolated let connection: String
     private var supported: Set<UInt8>?
     private var log: [String: String] = [:]
     private let queue = DispatchQueue(label: "enetdiag.link")
