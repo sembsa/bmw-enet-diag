@@ -31,6 +31,7 @@ import SwiftUI
         Task { @MainActor in
             if !CommandLine.arguments.contains("--offline") { await model.connectDemo() }
             if model.section == .live { model.startLive() }
+            if let i = CommandLine.arguments.firstIndex(of: "--engine-step"), i + 1 < CommandLine.arguments.count { model.seed(CommandLine.arguments[i + 1]) }
             try? await Task.sleep(for: .seconds(4))
             host.layoutSubtreeIfNeeded()
             if let rep = host.bitmapImageRepForCachingDisplay(in: host.bounds) {

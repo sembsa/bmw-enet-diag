@@ -65,15 +65,16 @@ struct MainToolbar: ToolbarContent {
                     Button { Task { await m.readFaults() } } label: { Label(t("Odczytaj błędy ponownie", "Read Faults Again"), systemImage: "arrow.clockwise") }
                     Button { Task { await m.runProbe() } } label: { Label(t("Pełny odczyt silnika", "Full Engine Read"), systemImage: "doc.text.magnifyingglass") }
                         .keyboardShortcut("p", modifiers: [.command, .shift])
-                    Divider()
-                    Button { Task { await m.disconnect() } } label: { Label(t("Rozłącz", "Disconnect"), systemImage: "eject") }
                 } label: {
                     Label(m.isDemo ? "Demo" : t("Połączono", "Connected"), systemImage: m.isDemo ? "play.rectangle.fill" : "cable.connector")
                         .labelStyle(.titleAndIcon)
                 }
-                .help(t("Połączenie: odczytaj ponownie (⌘R), pełny odczyt (⇧⌘P), rozłącz (⌘K)",
-                        "Connection: read again (⌘R), full read (⇧⌘P), disconnect (⌘K)"))
+                .help(t("Odczytaj ponownie (⌘R), pełny odczyt (⇧⌘P)", "Read again (⌘R), full read (⇧⌘P)"))
                 .disabled(m.busy != nil)
+            }
+            ToolbarItem(placement: .primaryAction) {                 // always available, also during a read
+                Button { Task { await m.disconnect() } } label: { Label(t("Rozłącz", "Disconnect"), systemImage: "eject").labelStyle(.titleAndIcon) }
+                    .help(t("Zakończ połączenie z autem (⌘K)", "End the connection to the car (⌘K)"))
             }
         } else {
             ToolbarItem(placement: .primaryAction) {
@@ -180,6 +181,9 @@ struct Welcome: View {
                     .buttonStyle(.glassProminent)
                 Button { Task { await m.connectDemo() } } label: { Label(t("Wypróbuj demo", "Try the Demo"), systemImage: "play.rectangle") }
             }
+            .disabled(m.busy != nil)
+            Label(m.busy ?? t("Niepołączono", "Not connected"), systemImage: m.busy == nil ? "bolt.horizontal.circle" : "antenna.radiowaves.left.and.right")
+                .foregroundStyle(.secondary)
         }
         .padding(40)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -225,6 +229,29 @@ struct Dashboard: View {
         let levels = m.report?.findings.map(\.level) ?? []
         let worst: Finding.Level? = m.report == nil ? nil : levels.contains(.problem) ? .problem : levels.contains(.watch) ? .watch : .ok
         VStack(alignment: .leading, spacing: 24) {
+            Card {
+                HStack(spacing: 14) {
+                    Image(systemName: m.isDemo ? "play.rectangle.fill" : "cable.connector").font(.title).foregroundStyle(.green).frame(width: 36)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(m.isDemo ? t("Demo – symulowane auto", "Demo – a simulated car") : t("Połączono z autem", "Connected to the car")).font(.title2.weight(.semibold))
+                        Text(m.busy ?? (m.isDemo ? t("Nic nie jest wysyłane do prawdziwego auta.", "Nothing is sent to a real car.")
+                                                 : t("Bramka ", "Gateway ") + m.connection + t(" · tylko odczyt", " · read-only")))
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Button { Task { await m.disconnect() } } label: { Label(t("Rozłącz", "Disconnect"), systemImage: "eject") }
+                        .buttonStyle(.glass).controlSize(.large)
+                }
+                Divider()
+                Text(t("Co chcesz zrobić?", "What would you like to do?")).font(.headline).foregroundStyle(.secondary)
+                GlassActions {
+                    let faults = Button { m.section = .faults } label: {
+                        Label(m.faults.isEmpty ? t("Zobacz błędy", "View Faults") : t("Zobacz błędy (\(m.faults.count))", "View Faults (\(m.faults.count))"), systemImage: "list.bullet.rectangle") }
+                    if m.faults.isEmpty { faults } else { faults.buttonStyle(.glassProminent) }
+                    Button { m.section = .live; m.startLive() } label: { Label(t("Dane na żywo", "Live Data"), systemImage: "waveform.path.ecg") }
+                    Button { m.section = .engine } label: { Label(t("Kontrola silnika", "Engine Check"), systemImage: "engine.combustion") }
+                }
+            }
             Grid(horizontalSpacing: 16, verticalSpacing: 16) {
                 GridRow {
                     Stat(title: t("Błędy", "Faults"), symbol: "exclamationmark.triangle", value: "\(m.faults.count)",
@@ -239,11 +266,6 @@ struct Dashboard: View {
                 }
             }
             if let id = m.identity { VehicleCard(id: id) }
-            GlassActions {
-                Button { m.section = .faults } label: { Label(t("Zobacz błędy", "View Faults"), systemImage: "list.bullet.rectangle") }
-                Button { m.section = .live; m.startLive() } label: { Label(t("Dane na żywo", "Live Data"), systemImage: "waveform.path.ecg") }
-                Button { m.section = .engine } label: { Label(t("Kontrola silnika", "Engine Check"), systemImage: "engine.combustion") }
-            }
             let top = Array(m.faults.sorted { ($0.active ? 0 : 1, $0.hint?.severity == .workshop ? 0 : 1) < ($1.active ? 0 : 1, $1.hint?.severity == .workshop ? 0 : 1) }.prefix(3))
             HStack(alignment: .top, spacing: 12) {
                 GroupBox {
@@ -554,76 +576,289 @@ struct LivePage: View {
 
 // MARK: engine check
 
+/// The four steps across the top: done ones ticked, the current one highlighted.
+struct CheckStepper: View {
+    let step: Model.CheckStep
+    var body: some View {
+        let titles = [t("Przygotowanie", "Get ready"), t("Wolne obroty", "Idle"), t("2500 obr/min", "2500 rpm"), t("Wynik", "Result")]
+        HStack(spacing: 10) {
+            ForEach(Array(titles.enumerated()), id: \.offset) { i, title in
+                let done = i < step.rawValue, now = i == step.rawValue
+                if i > 0 { Rectangle().fill(done || now ? Theme.blue : Color.secondary.opacity(0.3)).frame(height: 2) }
+                HStack(spacing: 8) {
+                    Group {
+                        if done { Image(systemName: "checkmark").font(.headline) } else { Text("\(i + 1)").font(.headline.monospacedDigit()) }
+                    }
+                    .foregroundStyle(now ? .white : done ? .green : .secondary)
+                    .frame(width: 30, height: 30)
+                    .background(now ? AnyShapeStyle(Theme.blue) : AnyShapeStyle(.quaternary), in: Circle())
+                    Text(title).font(now ? .title3.weight(.semibold) : .title3).foregroundStyle(now ? .primary : .secondary)
+                        .lineLimit(1).fixedSize()
+                }
+                .accessibilityElement(children: .combine)
+                .accessibilityValue(done ? t("zrobione", "done") : now ? t("teraz", "current") : "")
+            }
+        }
+    }
+}
+
+/// Where the revs are against the 2200–3200 band.
+struct RpmBand: View {
+    let rpm: Double
+    var body: some View {
+        let ok = (2200...3200).contains(rpm)
+        VStack(alignment: .leading, spacing: 4) {
+            GeometryReader { g in
+                let x = { (v: Double) in g.size.width * min(max(v, 0), 4500) / 4500 }
+                ZStack(alignment: .leading) {
+                    Capsule().fill(.quaternary).frame(height: 14)
+                    RoundedRectangle(cornerRadius: 5).fill(Color.green.opacity(0.45)).frame(width: x(3200) - x(2200), height: 14).offset(x: x(2200))
+                    Capsule().fill(ok ? Color.green : Color.orange).frame(width: 8, height: 34).offset(x: x(rpm) - 4)
+                        .animation(.smooth, value: rpm)
+                }
+                .frame(height: 34)
+            }
+            .frame(height: 34)
+            Text(t("Zielone pole: 2200–3200 obr/min", "Green zone: 2200–3200 rpm")).font(.callout).foregroundStyle(.secondary)
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(t("Obroty", "Revs")).accessibilityValue("\(Int(rpm))")
+    }
+}
+
 struct EnginePage: View {
     @EnvironmentObject var m: Model
-
-    var steps: [(String, Bool)] {
-        let warm = m.recorded.contains { ($0["coolant"] ?? 0) >= 70 }
-        let idle = m.recorded.filter { ($0["coolant"] ?? 0) >= 70 && (500..<1000).contains($0["rpm"] ?? 0) }.count
-        let mid = m.recorded.filter { ($0["coolant"] ?? 0) >= 70 && (2200...3200).contains($0["rpm"] ?? 0) }.count
-        return [(t("Silnik rozgrzany (płyn ≥ 70 °C)", "Engine warm (coolant ≥ 70 °C)"), warm),
-                (t("2–3 min na wolnych obrotach", "2–3 min at idle") + " (\(idle)/120)", idle >= 120),
-                (t("1 min przy ~2500 obr/min, na postoju", "1 min at ~2500 rpm, at standstill") + " (\(mid)/50)", mid >= 50)]
-    }
+    var last: Sample { m.live.last ?? [:] }
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                if m.connected {
-                    GroupBox {
-                        VStack(alignment: .leading, spacing: 8) {
-                            ForEach(steps, id: \.0) { s in
-                                Label(s.0, systemImage: s.1 ? "checkmark.circle.fill" : "circle").foregroundStyle(s.1 ? .green : .primary)
-                            }
-                            Text(t("Na postoju. Nie obsługuj komputera w czasie jazdy.", "At standstill. Don't operate the computer while driving."))
-                                .font(.caption).foregroundStyle(.secondary)
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    } label: { Label(m.recording == nil ? t("Nagranie", "Recording") : t("Nagrywanie… próbek: ", "Recording… samples: ") + "\(m.recorded.count)", systemImage: "record.circle") }
-                }
-                if let r = m.report {
-                    Text((m.reportName ?? "") + " · " + t("próbek ", "samples ") + "\(r.samples), " + t("na ciepło ", "warm ") + "\(r.warmSamples)")
-                        .font(.caption).foregroundStyle(.secondary)
-                    ForEach(r.findings) { f in
-                        GroupBox {
-                            HStack(alignment: .top, spacing: 12) {
-                                Image(systemName: f.level.symbol).font(.title).foregroundStyle(f.level.color)
-                                VStack(alignment: .leading, spacing: 6) {
-                                    Text(f.title.text).font(.title3.weight(.semibold))
-                                    Text(f.verdict.text).font(.body)
-                                    Text(f.values.sorted { $0.key < $1.key }.map { "\(Self.valueName($0.key)) \(String(format: "%.2f", $0.value))" }.joined(separator: " · "))
-                                        .font(.caption.monospacedDigit()).foregroundStyle(.secondary)
-                                }
-                                Spacer()
-                            }
-                            .padding(10)
-                        }
-                    }
-                    ForEach(r.notes, id: \.self) { n in Label(n.text, systemImage: "info.circle").font(.callout).foregroundStyle(.secondary) }
-                    let related = m.faults.filter { f in r.findings.contains { $0.level != .ok && $0.relatedKinds.contains(f.kind) } }
-                    if !related.isEmpty {
-                        GroupBox {
-                            VStack(alignment: .leading, spacing: 6) {
-                                ForEach(related) { f in
-                                    HStack { Pill(text: f.statusText, color: f.statusColor); Text(f.code).monospaced(); Text(f.hint?.title.text ?? f.unitText).foregroundStyle(.secondary) }
-                                }
-                            }
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                        } label: { Label(t("Powiązane błędy", "Related Faults"), systemImage: "link") }
-                    }
-                } else if !m.connected {
-                    ContentUnavailableView(t("Brak analizy", "No Analysis"), systemImage: "engine.combustion",
-                                           description: Text(t("Połącz się i nagraj log albo otwórz zapisany log w Zapisach.", "Connect and record a log, or open a saved log in Captures.")))
+            VStack(alignment: .leading, spacing: 20) {
+                CheckStepper(step: m.checkStep)
+                switch m.checkStep {
+                case .prepare: prepare
+                case .idle: idle
+                case .mid: mid
+                case .result: result
                 }
             }
-            .padding(24)
+            .frame(maxWidth: 920, alignment: .leading)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(28)
         }
-        .toolbar {
-            ToolbarItem {
-                if m.recording == nil {
-                    Button { m.startRecording() } label: { Label(t("Nagrywaj", "Record"), systemImage: "record.circle") }.disabled(!m.connected)
+        .task(id: m.connected) { if m.connected { m.startLive() } }      // the checklist needs moving values
+    }
+
+    // MARK: 1 - get ready
+
+    /// Why the check cannot start yet (nil = ready). Same conditions the analysis needs.
+    var blocker: String? {
+        guard m.connected else { return t("Najpierw połącz z autem", "Connect to the car first") }
+        guard !last.isEmpty else { return t("Czekam na dane z silnika…", "Waiting for engine data…") }
+        if (last["rpm"] ?? 0) < 300 { return t("Silnik nie pracuje – uruchom go", "The engine is off – start it") }
+        guard let c = last["coolant"] else { return t("Brak odczytu temperatury płynu", "No coolant temperature reading") }
+        if c < Analysis.warmC { return t("Silnik zimny – \(Int(c)) °C, poczekaj do 70 °C", "Engine cold – \(Int(c)) °C, wait for 70 °C") }
+        if (last["speed"] ?? 0) > 0 { return t("Auto jedzie – zatrzymaj się", "The car is moving – stop first") }
+        return nil
+    }
+
+    func check(_ title: String, _ ok: Bool?, _ detail: String, progress: Double? = nil) -> some View {
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: ok == true ? "checkmark.circle.fill" : ok == false ? "xmark.circle.fill" : "circle")
+                .font(.title2).foregroundStyle(ok == true ? Color.green : ok == false ? Color.orange : Color.secondary).frame(width: 28)
+            VStack(alignment: .leading, spacing: 3) {
+                Text(title).font(.title3.weight(.semibold))
+                Text(detail).foregroundStyle(.secondary)
+                if let progress, ok == false { ProgressView(value: min(max(progress, 0), 1)).frame(maxWidth: 260) }
+            }
+        }
+        .accessibilityElement(children: .combine)
+    }
+
+    @ViewBuilder var prepare: some View {
+        let on = m.connected && !last.isEmpty
+        let rpm = last["rpm"] ?? 0, coolant = last["coolant"], speed = last["speed"] ?? 0
+        Card {
+            Text(t("Przygotuj auto", "Get the car ready")).font(.title.weight(.semibold))
+            Text(t("Kontrola trwa około 4 minut: najpierw silnik pracuje na wolnych obrotach, potem przez minutę trzymasz 2500 obr/min. Aplikacja tylko czyta dane – niczego w aucie nie zmienia.",
+                   "The check takes about 4 minutes: first the engine idles, then you hold 2500 rpm for a minute. The app only reads data – it changes nothing in the car."))
+                .foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+            VStack(alignment: .leading, spacing: 14) {
+                check(t("Połączenie z autem", "Connection to the car"), m.connected,
+                      m.connected ? (m.isDemo ? t("Demo – symulowane auto", "Demo – simulated car") : t("Połączono", "Connected"))
+                                  : t("Kabel ENET do gniazda OBD i do Maca, zapłon włączony", "ENET cable into the OBD port and the Mac, ignition on"))
+                check(t("Silnik pracuje", "Engine running"), on ? rpm >= 300 : nil,
+                      !on ? "–" : rpm >= 300 ? "\(Int(rpm)) " + t("obr/min", "rpm") : t("Uruchom silnik", "Start the engine"))
+                check(t("Silnik rozgrzany (płyn co najmniej 70 °C)", "Engine warm (coolant at least 70 °C)"), on ? (coolant ?? 0) >= Analysis.warmC : nil,
+                      !on ? "–" : coolant.map { $0 >= Analysis.warmC ? "\(Int($0)) °C" : t("Teraz \(Int($0)) °C – poczekaj albo przejedź się i wróć", "Now \(Int($0)) °C – wait, or take a drive and come back") }
+                          ?? t("Brak odczytu temperatury", "No temperature reading"),
+                      progress: coolant.map { $0 / Analysis.warmC })
+                check(t("Auto stoi", "Car parked"), on ? speed == 0 : nil,
+                      !on ? "–" : speed == 0 ? t("0 km/h – skrzynia w P lub na luzie, hamulec postojowy", "0 km/h – gearbox in P or neutral, parking brake on")
+                                             : "\(Int(speed)) km/h – " + t("zatrzymaj się", "stop first"))
+            }
+            .padding(.vertical, 6)
+            GlassActions {
+                if m.connected {
+                    Button { m.startRecording() } label: { Label(t("Zacznij kontrolę", "Start the Check"), systemImage: "play.fill") }
+                        .buttonStyle(.glassProminent).disabled(blocker != nil)
                 } else {
-                    Button { m.stopRecording() } label: { Label(t("Zakończ i analizuj", "Stop and Analyse"), systemImage: "stop.fill") }
+                    Button { Task { await m.connect() } } label: { Label(t("Połącz z autem", "Connect to the Car"), systemImage: "cable.connector") }
+                        .buttonStyle(.glassProminent)
+                    Button { Task { await m.connectDemo() } } label: { Label(t("Wypróbuj demo", "Try the Demo"), systemImage: "play.rectangle") }
+                }
+                if m.report != nil {
+                    Button { m.newCheck = false } label: { Label(t("Wróć do wyniku", "Back to the Result"), systemImage: "chevron.backward") }
+                }
+            }
+            .disabled(m.busy != nil)
+            if let blocker { Label(blocker, systemImage: "exclamationmark.circle.fill").font(.title3).foregroundStyle(.orange) }
+            else { Label(t("Wszystko gotowe – kliknij „Zacznij kontrolę”.", "All set – click “Start the Check”."), systemImage: "checkmark.circle.fill").font(.title3).foregroundStyle(.green) }
+        }
+    }
+
+    // MARK: 2, 3 - recording
+
+    /// Why the current reading is not being counted (nil = it counts).
+    func notCounting(_ want: String) -> String? {
+        if !m.liveOn && !m.frozen { return t("Odczyt zatrzymany", "Reading stopped") }
+        let rpm = last["rpm"] ?? 0
+        if (last["coolant"] ?? 0) < Analysis.warmC { return t("Silnik za zimny (poniżej 70 °C) – czekam", "Engine too cold (below 70 °C) – waiting") }
+        if (last["speed"] ?? 0) > 0 { return t("Auto jedzie – zatrzymaj się", "The car is moving – stop") }
+        if Analysis.phase(last) == want { return nil }
+        if want == "idle" {
+            return rpm < 500 ? t("Silnik nie pracuje", "The engine is off") : rpm >= 1000 ? t("Puść gaz – obroty mają spaść poniżej 1000", "Let go of the pedal – revs must drop below 1000")
+                : t("Sterownik jeszcze nie reguluje mieszanki – czekam", "The engine computer isn't regulating the mixture yet – waiting")
+        }
+        return rpm < 2200 ? t("Za nisko – dodaj gazu", "Too low – more throttle") : rpm > 3200 ? t("Za wysoko – odpuść gaz", "Too high – ease off")
+            : t("Sterownik jeszcze nie reguluje mieszanki – trzymaj", "The engine computer isn't regulating the mixture yet – hold")
+    }
+
+    func recordingCard(title: String, text: String, want: String, good: String, count: Int, of total: Int, @ViewBuilder extra: () -> some View) -> some View {
+        let why = notCounting(want)
+        return Card {
+            Text(title).font(.title.weight(.semibold))
+            Text(text).font(.title3).fixedSize(horizontal: false, vertical: true)
+            extra()
+            Label(why ?? good, systemImage: why == nil ? "checkmark.circle.fill" : "exclamationmark.circle.fill")
+                .font(.title2.weight(.semibold)).foregroundStyle(why == nil ? .green : .orange)
+            ProgressView(value: Double(min(count, total)), total: Double(total)) {
+                Text(t("Postęp", "Progress") + ": \(min(count, total) * 100 / total) %").font(.headline.monospacedDigit())
+            }
+            .tint(why == nil ? Theme.blue : .orange)
+            GroupBox {
+                HStack(alignment: .top, spacing: 14) {
+                    Tile(label: t("Obroty", "Revs"), value: last["rpm"], unit: t("obr/min", "rpm"), digits: 0)
+                    Tile(label: t("Korekta chwilowa", "Short-term trim"), value: last["stft"], unit: "%", digits: 1)
+                    Tile(label: t("Korekta długa", "Long-term trim"), value: last["ltft"], unit: "%", digits: 1)
+                    Tile(label: t("Płyn", "Coolant"), value: last["coolant"], unit: "°C", digits: 0)
+                }
+                .padding(10)
+            }
+            GlassActions {
+                if !m.liveOn && !m.frozen {
+                    Button { m.startLive() } label: { Label(t("Wznów odczyt", "Resume Reading"), systemImage: "play.fill") }.buttonStyle(.glassProminent)
+                }
+                Button(role: .cancel) { m.cancelRecording() } label: { Label(t("Anuluj", "Cancel"), systemImage: "xmark") }
+                Button { m.stopRecording() } label: { Label(t("Zakończ teraz i pokaż wynik", "Finish Now and Show the Result"), systemImage: "stop.fill") }
+                    .help(t("Wynik z niepełnego nagrania może być mniej pewny", "A result from a partial recording may be less certain"))
+            }
+            Text(t("Nic nie musisz klikać – kolejny krok włączy się sam.", "Nothing to click – the next step starts by itself."))
+                .font(.callout).foregroundStyle(.secondary)
+        }
+    }
+
+    var idle: some View {
+        recordingCard(title: t("Wolne obroty", "Idle"),
+                      text: t("Nie dotykaj gazu. Zostaw silnik na wolnych obrotach, aż pasek dojdzie do końca (około 2 minut).",
+                              "Don't touch the pedal. Let the engine idle until the bar fills (about 2 minutes)."),
+                      want: "idle", good: t("Nagrywam – tak trzymaj", "Recording – keep it like this"), count: m.idleCount, of: Model.idleNeeded) { EmptyView() }
+    }
+
+    var mid: some View {
+        recordingCard(title: t("Trzymaj 2500 obr/min", "Hold 2500 rpm"),
+                      text: t("Auto stoi (P lub luz, hamulec postojowy). Wciśnij lekko gaz i trzymaj obroty w zielonym polu, aż pasek dojdzie do końca (około minuty).",
+                              "The car is parked (P or neutral, parking brake). Press the pedal lightly and keep the revs in the green zone until the bar fills (about a minute)."),
+                      want: "mid", good: t("Dobrze – trzymaj", "Good – hold it"), count: m.midCount, of: Model.midNeeded) {
+            HStack(alignment: .center, spacing: 20) {
+                Text("\(Int(last["rpm"] ?? 0))").font(.system(size: 64, weight: .semibold, design: .rounded)).monospacedDigit()
+                    .contentTransition(.numericText()).frame(minWidth: 170, alignment: .leading)
+                RpmBand(rpm: last["rpm"] ?? 0)
+            }
+        }
+    }
+
+    // MARK: 4 - result
+
+    var again: some View {
+        Button { m.newCheck = true } label: { Label(t("Nowa kontrola", "New Check"), systemImage: "arrow.counterclockwise") }
+    }
+
+    func counts(_ r: Report) -> String {
+        let name = m.reportName ?? ""
+        return name + " · " + t("próbek \(r.samples), na ciepłym silniku \(r.warmSamples)", "\(r.samples) samples, \(r.warmSamples) with the engine warm")
+    }
+
+    @ViewBuilder var result: some View {
+        if let r = m.report {
+            let levels = r.findings.map(\.level)
+            let worst: Finding.Level = levels.contains(.problem) ? .problem : levels.contains(.watch) ? .watch : r.findings.isEmpty ? .unknown : .ok
+            let related = m.faults.filter { f in r.findings.contains { $0.level != .ok && $0.level != .unknown && $0.relatedKinds.contains(f.kind) } }
+            let file = m.captures.first { $0.lastPathComponent == m.reportName }
+            Card {
+                HStack(alignment: .top, spacing: 14) {
+                    Image(systemName: worst.symbol).font(.system(size: 40)).foregroundStyle(worst.color)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(worst == .problem ? t("Wykryto problem", "A problem was found") : worst == .watch ? t("Są uwagi do sprawdzenia", "Some things to check")
+                             : worst == .ok ? t("Silnik bez uwag", "The engine looks fine") : t("Za mało danych na wynik", "Not enough data for a result"))
+                            .font(.title.weight(.semibold))
+                        Text(counts(r))
+                            .font(.callout).foregroundStyle(.secondary)
+                    }
+                }
+                ForEach(r.notes, id: \.self) { n in
+                    Label(n.text, systemImage: "exclamationmark.triangle.fill").foregroundStyle(.orange).fixedSize(horizontal: false, vertical: true)
+                }
+                if !r.notes.isEmpty {
+                    Text(t("Nagranie jest niepełne, więc wynik jest mniej pewny – najlepiej powtórz kontrolę.",
+                           "The recording is incomplete, so the result is less certain – best repeat the check.")).font(.callout)
+                }
+                Text(worst == .problem || worst == .watch
+                     ? t("Co dalej: przeczytaj opisy przy czerwonych i pomarańczowych pozycjach poniżej, potem kliknij „Kopiuj dla AI” i wklej wynik asystentowi albo pokaż go mechanikowi. Po naprawie zrób nową kontrolę.",
+                         "What next: read the notes on the red and orange items below, then click “Copy for AI” and paste the result to your assistant, or show it to a mechanic. After the repair run a new check.")
+                     : worst == .ok ? t("Nic nie trzeba robić. Powtórz kontrolę, gdy zapali się kontrolka silnika albo silnik zacznie pracować nierówno.",
+                                        "Nothing to do. Repeat the check if the engine light comes on or the engine starts running unevenly.")
+                     : t("Rozgrzej silnik i zrób nową kontrolę.", "Warm the engine up and run a new check."))
+                    .font(.title3).fixedSize(horizontal: false, vertical: true)
+                GlassActions {
+                    if worst == .unknown || !r.notes.isEmpty { again.buttonStyle(.glassProminent) } else { again }
+                    Button { copy(m.reportText()) } label: { Label(t("Kopiuj dla AI", "Copy for AI"), systemImage: "sparkles") }
+                        .help(t("Kopiuje wynik jako tekst – wklej go swojemu asystentowi AI albo wyślij mechanikowi", "Copies the result as text – paste it to your AI assistant or send it to a mechanic"))
+                    if let file {
+                        Button { NSWorkspace.shared.activateFileViewerSelecting([file]) } label: { Label(t("Pokaż zapis w Finderze", "Show the Log in Finder"), systemImage: "folder") }
+                    }
+                }
+            }
+            let order: [Finding.Level] = [.problem, .watch, .unknown, .ok]
+            ForEach(r.findings.sorted { order.firstIndex(of: $0.level)! < order.firstIndex(of: $1.level)! }) { f in
+                Card {
+                    HStack(alignment: .top, spacing: 12) {
+                        Image(systemName: f.level.symbol).font(.title).foregroundStyle(f.level.color).frame(width: 32)
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text(f.title.text).font(.title3.weight(.semibold))
+                            Text(f.verdict.text).fixedSize(horizontal: false, vertical: true)
+                            Text(f.values.sorted { $0.key < $1.key }.map { "\(Self.valueName($0.key)) \(String(format: "%.2f", $0.value))" }.joined(separator: " · "))
+                                .font(.callout.monospacedDigit()).foregroundStyle(.secondary)
+                        }
+                    }
+                    .accessibilityElement(children: .combine)
+                }
+            }
+            if !related.isEmpty {
+                Card(title: t("Powiązane błędy w pamięci auta", "Related Faults in the Car's Memory"), symbol: "link") {
+                    ForEach(related) { f in
+                        HStack { Pill(text: f.statusText, color: f.statusColor); Text(f.code).monospaced(); Text(f.hint?.title.text ?? f.unitText).foregroundStyle(.secondary) }
+                    }
+                    Button(t("Zobacz błędy", "View Faults")) { m.section = .faults }.buttonStyle(.glass)
                 }
             }
         }

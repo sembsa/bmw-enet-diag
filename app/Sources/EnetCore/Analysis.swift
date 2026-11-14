@@ -25,7 +25,8 @@ public struct Report: Sendable {
 }
 
 public enum Analysis {
-    static let warmC = 70.0, trimHigh = 8.0, leakDrop = 5.0
+    public static let warmC = 70.0
+    static let trimHigh = 8.0, leakDrop = 5.0
 
     static func mean(_ xs: [Double?]) -> Double? {
         let v = xs.compactMap { $0 }
@@ -37,6 +38,12 @@ public enum Analysis {
         if rpm > 500, rpm < 1000, (s["speed"] ?? 0) == 0 { return "idle" }
         if (2200...3200).contains(rpm) { return "mid" }
         return nil
+    }
+
+    /// What a sample counts as in `analyze`: "idle", "mid" or nil (cold, open loop, moving, other revs). For the recording guide.
+    public static func phase(_ s: Sample) -> String? {
+        guard (s["coolant"] ?? 0) >= warmC, s["fuel_status"].map({ Int($0) & 0x02 != 0 }) ?? true else { return nil }
+        return bin(s)
     }
 
     /// speed-density air mass per litre of displacement, g/s (the litres cancel in the idle/mid ratio)

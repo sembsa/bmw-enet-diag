@@ -58,6 +58,20 @@ enum Section: String, CaseIterable, Identifiable {
     @Published private(set) var reportName: String?
     @Published private(set) var captures: [URL] = Captures.list()
 
+    // engine check: get ready -> idle -> 2500 rpm -> result
+    enum CheckStep: Int { case prepare, idle, mid, result }
+    static let idleNeeded = 120, midNeeded = 50
+    @Published private(set) var idleCount = 0                      // samples the analysis will use, per step
+    @Published private(set) var midCount = 0
+    @Published var newCheck = false                                // the owner asked for a new check while a result exists
+    private var seedStep: CheckStep?                               // screenshots only
+    private(set) var frozen = false                                // screenshots only: no polling
+    var checkStep: CheckStep {
+        if let seedStep { return seedStep }
+        if recording != nil { return idleCount < Model.idleNeeded ? .idle : .mid }
+        return report != nil && !newCheck ? .result : .prepare
+    }
+
     var connected: Bool { car != nil }
     var isDemo: Bool { connection == "DEMO" }
 
@@ -68,6 +82,7 @@ enum Section: String, CaseIterable, Identifiable {
         connection = "DEMO"
         report = Analysis.analyze(Car.demoLog())
         reportName = t("demo – log 4 min", "demo – 4 min log")
+        newCheck = false
         await readFaults()
         await firstSnapshot()
     }
@@ -75,6 +90,8 @@ enum Section: String, CaseIterable, Identifiable {
     // MARK: connection
 
     func connect() async {
+        guard busy == nil else { return }
+        await disconnect()                                   // never two links to the gateway
         await run(t("Łączenie z bramką ENET…", "Connecting to the ENET gateway…")) {
             let c: Car
             if let i = CommandLine.arguments.firstIndex(of: "--replay"), i + 1 < CommandLine.arguments.count {
@@ -103,14 +120,16 @@ enum Section: String, CaseIterable, Identifiable {
                  "My BMW: VIN \(partial), type code \(id.typeCode ?? "?"), model year \(id.modelYear.map(String.init) ?? "?"), engine unit \(id.ecuName ?? "?"). Which model, body and engine is it?")
     }
 
+    /// The window shows "not connected" first; the socket is closed after, so a stuck link cannot hold the UI.
     func disconnect() async {
         stopLive()
         stopRecording()
-        await car?.close()
+        let old = car
         car = nil
         identity = nil
         connection = ""
         misfires = []
+        await old?.close()
     }
 
     // MARK: reads
@@ -136,24 +155,27 @@ enum Section: String, CaseIterable, Identifiable {
     }
 
     func startLive() {
-        guard let car, !liveOn else { return }
+        guard let car, !liveOn, !frozen else { return }
         liveOn = true
         liveTask = Task {
             while !Task.isCancelled {
                 do {
                     let s = try await car.snapshot()
-                    if live.count % 20 == 0 { misfires = (try? await car.misfires()) ?? misfires }
+                    let mis = live.count % 20 == 0 ? try? await car.misfires() : nil
+                    if Task.isCancelled { break }            // stopped or disconnected meanwhile: these readings are stale
+                    if let mis { misfires = mis }
                     live.append(s)
                     if live.count > 600 { live.removeFirst(live.count - 600) }
-                    if let w = recording { w.write(s); recorded.append(s) }
+                    if let w = recording { w.write(s); recorded.append(s); tally(s) }
                 } catch {
+                    if Task.isCancelled || self.car !== car { break }   // the owner disconnected: not an error, and not ours to close
                     self.error = "\(error)"
                     await disconnect()                       // the link is gone: say so, don't pretend
                     break
                 }
                 try? await Task.sleep(for: .milliseconds(500))
             }
-            liveOn = false
+            if !Task.isCancelled { liveOn = false }          // a cancelled loop must not switch off its successor
         }
     }
 
@@ -169,15 +191,44 @@ enum Section: String, CaseIterable, Identifiable {
         do {
             recording = try Captures.LogWriter()
             recorded = []
-            report = nil
-            startLive()
+            idleCount = 0; midCount = 0
+            startLive()                                  // the last result stays until this one is finished (Cancel returns to it)
         } catch { self.error = "\(error)" }
+    }
+
+    /// Step 2 counts idle samples; step 3 starts once step 2 is full and counts 2200-3200 rpm samples; then the check ends itself.
+    private func tally(_ s: Sample) {
+        let p = Analysis.phase(s)
+        if idleCount < Model.idleNeeded { if p == "idle" { idleCount += 1 } }
+        else if p == "mid" { midCount += 1 }
+        if midCount >= Model.midNeeded { stopRecording() }
+    }
+
+    /// Drops the recording and its file; the previous result (if any) stays.
+    func cancelRecording() {
+        guard let w = recording else { return }
+        w.close()
+        try? FileManager.default.removeItem(at: w.url)
+        recording = nil
+        recorded = []
+    }
+
+    /// Screenshots (`--engine-step prepare|cold|idle|low|mid`): one step with demo values, no polling, no log file.
+    func seed(_ step: String) {
+        stopLive()
+        let log = Car.demoLog()
+        var s = log[step == "mid" ? 70 : 0]
+        if step == "cold" { s["coolant"] = 48 }
+        live = [s]; frozen = true; newCheck = true
+        if step == "idle" { seedStep = .idle; idleCount = 45 }
+        if step == "low" || step == "mid" { seedStep = .mid; idleCount = Model.idleNeeded; midCount = 18 }
     }
 
     func stopRecording() {
         guard let w = recording else { return }
         w.close()
         recording = nil
+        newCheck = false
         report = Analysis.analyze(recorded)
         reportName = w.url.lastPathComponent
         captures = Captures.list()
@@ -187,6 +238,7 @@ enum Section: String, CaseIterable, Identifiable {
         do {
             report = Analysis.analyze(try Captures.readLog(url))
             reportName = url.lastPathComponent
+            newCheck = false
             section = .engine
         } catch { self.error = "\(error)" }
     }
@@ -218,11 +270,28 @@ enum Section: String, CaseIterable, Identifiable {
                      "Explain them, rank them by importance and tell me what to check first.")
     }
 
+    /// The engine-check result as plain text for the owner's AI (or a mechanic).
+    func reportText() -> String {
+        guard let r = report else { return "" }
+        var s = t("Kontrola silnika mojego BMW (próbek \(r.samples), na ciepłym silniku \(r.warmSamples)):\n",
+                  "Engine check of my BMW (\(r.samples) samples, \(r.warmSamples) with the engine warm):\n")
+        for f in r.findings {
+            s += "[\(f.level.rawValue)] \(f.title.text): \(f.verdict.text)"
+            s += " (" + f.values.sorted { $0.key < $1.key }.map { "\($0.key) \($0.value)" }.joined(separator: ", ") + ")\n"
+        }
+        for n in r.notes { s += "! \(n.text)\n" }
+        let codes = faults.filter { $0.kind == "engine" }.map(\.code)
+        if !codes.isEmpty { s += t("Błędy silnika w pamięci: ", "Engine faults in memory: ") + codes.joined(separator: ", ") + "\n" }
+        return s + t("Wyjaśnij wynik prostym językiem i powiedz, co sprawdzić najpierw.", "Explain the result in plain language and tell me what to check first.")
+    }
+
     private func run(_ what: String, _ body: @escaping () async throws -> Void) async {
         guard busy == nil else { return }                  // one operation at a time (no double Connect)
         busy = what
         error = nil
+        let had = car
         do { try await body() } catch {
+            if had != nil, car !== had { busy = nil; return }  // the owner disconnected during the read: not an error
             self.error = "\(error)"
             if error is LinkError, car != nil, !isDemo { busy = nil; await disconnect() }
         }

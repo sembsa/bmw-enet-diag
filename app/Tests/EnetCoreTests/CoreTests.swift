@@ -152,6 +152,15 @@ func rows(_ idle: Double, _ mid: Double, coolant: Double = 85, maf: Bool = true,
 final class AnalysisTests: XCTestCase {
     func level(_ r: Report, _ c: String) -> Finding.Level? { r.findings.first { $0.check == c }?.level }
 
+    func testPhase() {                                              // the recording guide counts what analyze() uses
+        XCTAssertEqual(Analysis.phase(["rpm": 780, "speed": 0, "coolant": 85]), "idle")
+        XCTAssertEqual(Analysis.phase(["rpm": 2500, "speed": 0, "coolant": 85, "fuel_status": 2]), "mid")
+        XCTAssertNil(Analysis.phase(["rpm": 780, "speed": 0, "coolant": 48]))                      // cold
+        XCTAssertNil(Analysis.phase(["rpm": 780, "speed": 0, "coolant": 85, "fuel_status": 1]))    // open loop
+        XCTAssertNil(Analysis.phase(["rpm": 900, "speed": 20, "coolant": 85]))                     // moving
+        XCTAssertNil(Analysis.phase(["rpm": 1500, "speed": 0, "coolant": 85]))                     // between the bands
+    }
+
     func testVerdicts() {
         XCTAssertEqual(level(Analysis.analyze(rows(16, 3)), "mixture"), .problem)
         XCTAssertTrue(Analysis.analyze(rows(16, 3)).findings.first { $0.check == "mixture" }!.verdict.en.contains("intake leak"))
@@ -235,6 +244,22 @@ final class HardeningTests: XCTestCase {
         for _ in 0..<5 { do { _ = try t.send(0x12, [0x01, 0x0C]) } catch { failed = true; break } }
         XCTAssertTrue(failed)
         t.close()
+    }
+
+    /// Disconnect while a request waits on a silent gateway: close returns at once, the waiting request ends at once,
+    /// and nothing is sent on the closed socket afterwards.
+    func testCloseEndsAStalledRequestPromptly() throws {
+        let gw = FakeGateway(replies: [])
+        let t = try TcpTransport(host: "127.0.0.1", port: gw.port, timeout: 5)
+        let done = expectation(description: "request ended")
+        let start = Date()
+        Thread.detachNewThread { _ = try? t.send(0x12, [0x01, 0x0C]); done.fulfill() }
+        Thread.sleep(forTimeInterval: 0.3)
+        t.close()
+        XCTAssertLessThan(Date().timeIntervalSince(start), 1.5, "close blocked")
+        wait(for: [done], timeout: 1.5)
+        XCTAssertThrowsError(try t.send(0x12, [0x01, 0x0C]))
+        t.close()                                                   // twice is harmless
     }
 
     func testOnlyLocalGateways() {

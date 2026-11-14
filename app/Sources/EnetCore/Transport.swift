@@ -43,8 +43,7 @@ final class TcpTransport: Transport, @unchecked Sendable {
             $0.withMemoryRebound(to: sockaddr.self, capacity: 1) { connect(fd, $0, socklen_t(MemoryLayout<sockaddr_in>.size)) }
         }
         if ok != 0 {
-            let e = String(cString: strerror(errno))
-            Darwin.close(fd)
+            let e = String(cString: strerror(errno))                // deinit closes fd
             throw LinkError(description: "no connection to \(host): \(e)")
         }
     }
@@ -131,7 +130,10 @@ final class TcpTransport: Transport, @unchecked Sendable {
         return out
     }
 
-    func close() { Darwin.close(fd) }
+    /// Ends the link at once: a request waiting in another thread fails now, later ones fail too. The descriptor itself
+    /// is released in deinit, so a request still in flight can never land on a reused descriptor.
+    func close() { shutdown(fd, SHUT_RDWR) }
+    deinit { if fd >= 0 { Darwin.close(fd) } }
 }
 
 /// Answers from a saved probe's exchanges: {"12:0100": "4100…", "df:1902ff": {"12": "5902…"}}.
