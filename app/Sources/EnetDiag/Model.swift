@@ -7,7 +7,7 @@ func t(_ pl: String, _ en: String) -> String { Lang.current == .pl ? pl : en }
 
 enum Section: String, CaseIterable, Identifiable {
     case overview, faults, live, engine, captures, ai
-    var id: String { rawValue }
+    var id: Self { self }
     var title: String {
         switch self {
         case .overview: t("Przegląd", "Overview")
@@ -36,7 +36,7 @@ enum Section: String, CaseIterable, Identifiable {
         if let i = a.firstIndex(of: "--section"), i + 1 < a.count { return Section(rawValue: a[i + 1]) }   // screenshots
         return .overview
     }()
-    @Published var host = UserDefaults.standard.string(forKey: "host") ?? ""
+    var host: String { UserDefaults.standard.string(forKey: "host") ?? "" }   // Settings
     @Published private(set) var car: Car?
     @Published private(set) var connection = ""
     @Published var busy: String?
@@ -47,6 +47,7 @@ enum Section: String, CaseIterable, Identifiable {
     @Published private(set) var probe: Probe?
 
     @Published private(set) var live: [Sample] = []
+    @Published private(set) var misfires: [Misfire] = []
     @Published private(set) var liveOn = false
     private var liveTask: Task<Void, Never>?
 
@@ -67,13 +68,13 @@ enum Section: String, CaseIterable, Identifiable {
         report = Analysis.analyze(Car.demoLog())
         reportName = t("demo – log 4 min", "demo – 4 min log")
         await readFaults()
+        await firstSnapshot()
     }
 
     // MARK: connection
 
     func connect() async {
         await run(t("Łączenie z bramką ENET…", "Connecting to the ENET gateway…")) {
-            UserDefaults.standard.set(self.host, forKey: "host")
             let c: Car
             if let i = CommandLine.arguments.firstIndex(of: "--replay"), i + 1 < CommandLine.arguments.count {
                 c = try Car(replay: URL(fileURLWithPath: CommandLine.arguments[i + 1]))
@@ -83,7 +84,12 @@ enum Section: String, CaseIterable, Identifiable {
             self.car = c
             self.connection = c.connection
         }
-        if connected { await readFaults() }
+        if connected { await readFaults(); await firstSnapshot() }
+    }
+
+    /// One reading at connect: the overview shows the odometer, the live page has values at once.
+    private func firstSnapshot() async {
+        if let car, let s = try? await car.snapshot() { live = [s] }
     }
 
     func disconnect() async {
@@ -92,6 +98,7 @@ enum Section: String, CaseIterable, Identifiable {
         await car?.close()
         car = nil
         connection = ""
+        misfires = []
     }
 
     // MARK: reads
@@ -122,12 +129,14 @@ enum Section: String, CaseIterable, Identifiable {
         liveTask = Task {
             while !Task.isCancelled {
                 do {
-                    let s = try await car.snapshot(Captures.logKeys)
+                    let s = try await car.snapshot()
+                    if live.count % 20 == 0 { misfires = (try? await car.misfires()) ?? misfires }
                     live.append(s)
                     if live.count > 600 { live.removeFirst(live.count - 600) }
                     if let w = recording { w.write(s); recorded.append(s) }
                 } catch {
                     self.error = "\(error)"
+                    await disconnect()                       // the link is gone: say so, don't pretend
                     break
                 }
                 try? await Task.sleep(for: .milliseconds(500))
@@ -197,9 +206,13 @@ enum Section: String, CaseIterable, Identifiable {
     }
 
     private func run(_ what: String, _ body: @escaping () async throws -> Void) async {
+        guard busy == nil else { return }                  // one operation at a time (no double Connect)
         busy = what
         error = nil
-        do { try await body() } catch { self.error = "\(error)" }
+        do { try await body() } catch {
+            self.error = "\(error)"
+            if error is LinkError, car != nil, !isDemo { busy = nil; await disconnect() }
+        }
         busy = nil
     }
 }

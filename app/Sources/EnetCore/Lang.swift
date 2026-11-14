@@ -1,11 +1,11 @@
-// Lang - the app speaks Polish and English: the system language when it is Polish, else English;
-// the owner can pick one in Settings (UserDefaults "lang").
+// Lang - Polish and English. The app bundle declares both (CFBundleLocalizations, en.lproj / pl.lproj), so macOS
+// picks one, per app in System Settings › Language & Region; without a bundle (MCP, tests) the system language.
 import Foundation
 
 public enum Lang: String, CaseIterable, Sendable { case pl, en
     public static var current: Lang {
-        if let s = UserDefaults.standard.string(forKey: "lang"), let l = Lang(rawValue: s) { return l }
-        return Locale.preferredLanguages.first?.hasPrefix("pl") == true ? .pl : .en
+        let langs = Bundle.main.localizations.count > 1 ? Bundle.main.preferredLocalizations : Locale.preferredLanguages
+        return langs.first?.hasPrefix("pl") == true ? .pl : .en
     }
 }
 

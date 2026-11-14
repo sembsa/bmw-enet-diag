@@ -10,23 +10,55 @@ import SwiftUI
             Task { await MCP.serve(); exit(0) }
             dispatchMain()
         }
+        if let i = CommandLine.arguments.firstIndex(of: "--render"), i + 1 < CommandLine.arguments.count {
+            render(to: CommandLine.arguments[i + 1])                  // screenshots while the screen is locked
+        }
         EnetDiagApp.main()
+    }
+
+    /// Draws the demo window's content (no title bar or toolbar) into a PNG, offscreen, then exits.
+    @MainActor static func render(to path: String) {
+        let app = NSApplication.shared
+        app.setActivationPolicy(.prohibited)
+        let dark = CommandLine.arguments.contains("--dark")
+        app.appearance = NSAppearance(named: dark ? .darkAqua : .aqua)
+        let model = Model()
+        let host = NSHostingView(rootView: RootView().environmentObject(model).frame(width: 1280, height: 800))
+        let w = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1280, height: 800), styleMask: [.titled], backing: .buffered, defer: false)
+        w.appearance = app.appearance
+        w.backgroundColor = .windowBackgroundColor
+        w.contentView = host
+        Task { @MainActor in
+            await model.connectDemo()
+            if model.section == .live { model.startLive() }
+            try? await Task.sleep(for: .seconds(4))
+            host.layoutSubtreeIfNeeded()
+            if let rep = host.bitmapImageRepForCachingDisplay(in: host.bounds) {
+                host.cacheDisplay(in: host.bounds, to: rep)
+                try? rep.representation(using: .png, properties: [:])?.write(to: URL(fileURLWithPath: path))
+            }
+            exit(0)
+        }
+        app.run()
     }
 }
 
 struct EnetDiagApp: App {
+    @NSApplicationDelegateAdaptor(AppDelegate.self) var delegate
     @StateObject var model = Model()
-    @AppStorage("lang") var lang = ""
 
     var body: some Scene {
-        WindowGroup("BMW ENET Diag") {
+        Window("BMW ENET Diag", id: "main") {
             RootView().environmentObject(model)
-                .frame(minWidth: 980, minHeight: 620)
-                .tint(Theme.blue)
+                .frame(minWidth: 900, minHeight: 600)
         }
         .windowToolbarStyle(.unified)
-        .defaultSize(width: 1320, height: 820)
+        .windowResizability(.contentMinSize)
+        .defaultSize(width: 1280, height: 800)
         .commands {
+            SidebarCommands()
+            InspectorCommands()
+            ToolbarCommands()
             CommandGroup(replacing: .appInfo) {
                 Button(t("O BMW ENET Diag", "About BMW ENET Diag")) {
                     NSApplication.shared.orderFrontStandardAboutPanel(options: [
@@ -60,4 +92,9 @@ struct EnetDiagApp: App {
         }
         Settings { SettingsView() }
     }
+}
+
+/// Closing the window ends the app (one window, nothing left polling the car).
+final class AppDelegate: NSObject, NSApplicationDelegate {
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { true }
 }
