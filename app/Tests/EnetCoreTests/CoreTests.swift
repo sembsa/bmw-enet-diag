@@ -282,6 +282,15 @@ final class IdentityTests: XCTestCase {
         XCTAssertEqual(id.modelYear, 2022)
     }
 
+    func testNorms() {
+        let warmIdle: Sample = ["rpm": 800, "speed": 0, "coolant": 90, "fuel_status": 2]
+        XCTAssertEqual(Norms.check("ltft", 7, in: warmIdle)?.ok, true)
+        XCTAssertEqual(Norms.check("ltft", 14, in: warmIdle)?.ok, false)
+        XCTAssertEqual(Norms.check("voltage", 12.0, in: warmIdle)?.ok, false)
+        XCTAssertNil(Norms.check("ltft", 14, in: ["rpm": 800, "coolant": 40, "fuel_status": 1])?.ok)   // open loop: not judged
+        XCTAssertNil(Norms.check("rail", 350, in: warmIdle))                                            // engine-specific: no norm
+    }
+
     func testDemoIdentity() async throws {
         let id = try await Car.demo().identity()
         XCTAssertEqual(id.vin, "WBA7L1100N7123456")

@@ -457,16 +457,29 @@ struct FaultInspector: View {
 
 struct Tile: View {
     let label: String, value: Double?, unit: String, digits: Int
+    var norm: Norm? = nil
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(label).font(.callout).foregroundStyle(.secondary).lineLimit(1)
             HStack(alignment: .firstTextBaseline, spacing: 3) {
                 Text(value.map { String(format: "%.\(digits)f", $0) } ?? "–")
                     .font(.system(size: 28, weight: .semibold, design: .rounded)).monospacedDigit().contentTransition(.numericText())
+                    .foregroundStyle(norm?.ok == false ? AnyShapeStyle(.orange) : AnyShapeStyle(.primary))
                 Text(unit).font(.caption).foregroundStyle(.secondary)
             }
+            if let norm {
+                let color: Color = norm.ok == true ? .green : norm.ok == false ? .orange : .secondary
+                Label {
+                    Text(t("norma ", "normal ") + norm.range.text + (norm.note.map { " · " + $0.text } ?? ""))
+                } icon: {
+                    Image(systemName: norm.ok == true ? "checkmark.circle.fill" : norm.ok == false ? "exclamationmark.triangle.fill" : "clock")
+                        .foregroundStyle(color)
+                }
+                .font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                .help(norm.ok == false ? t("Poza typowym zakresem", "Outside the typical range") : t("Typowy zakres dla nowoczesnego silnika benzynowego", "Typical range for a modern petrol engine"))
+            }
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 }
 
@@ -503,7 +516,8 @@ struct LivePage: View {
                         if !pids.isEmpty {
                             GroupBox {
                                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 150), spacing: 14)], alignment: .leading, spacing: 14) {
-                                    ForEach(pids, id: \.key) { p in Tile(label: Pids.label(p), value: last[p.key], unit: p.unit, digits: Self.digits[p.key] ?? 0) }
+                                    ForEach(pids, id: \.key) { p in Tile(label: Pids.label(p), value: last[p.key], unit: p.unit, digits: Self.digits[p.key] ?? 0,
+                                                                     norm: last[p.key].flatMap { Norms.check(p.key, $0, in: last) }) }
                                 }
                                 .padding(12)
                             } label: { Text(Self.groupTitle[g]?.text ?? "").font(.headline).padding(.bottom, 2) }
