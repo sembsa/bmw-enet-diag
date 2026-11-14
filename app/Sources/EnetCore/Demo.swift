@@ -92,9 +92,10 @@ final class DemoTransport: Transport, @unchecked Sendable {
         case 0x01:
             guard uds.count >= 2 else { return nil }
             let pid = uds[1]
+            if pid == 0x1C { return [0x41, 0x1C, 0x06] }                // EOBD
             if pid % 0x20 == 0 {                                    // supported-PID bitmaps
                 var bits: UInt32 = 0
-                for p in Pids.all where p.pid > pid && p.pid <= pid + 0x20 { bits |= 1 << (31 - UInt32(p.pid - pid - 1)) }
+                for p in Pids.all.map(\.pid) + [0x1C] where p > pid && p <= pid + 0x20 { bits |= 1 << (31 - UInt32(p - pid - 1)) }
                 if Pids.all.contains(where: { $0.pid > pid + 0x20 }) { bits |= 1 }   // the next bitmap follows
                 return [0x41, pid, UInt8(bits >> 24), UInt8(bits >> 16 & 0xFF), UInt8(bits >> 8 & 0xFF), UInt8(bits & 0xFF)]
             }
@@ -111,7 +112,15 @@ final class DemoTransport: Transport, @unchecked Sendable {
         case 0x07: return [0x47, 0x00]
         case 0x02: return [0x42, 0x02, 0x00, 0x00, 0x00]
         case 0x22 where uds.count >= 3 && uds[1] == 0xF1 && uds[2] == 0x90:
-            return [0x62, 0xF1, 0x90] + Array("WBADEMO0000000000".utf8)
+            return [0x62, 0xF1, 0x90] + Array("WBA7L1100N7123456".utf8)
+        case 0x09:
+            switch uds.count >= 2 ? uds[1] : 0 {
+            case 0x02: return [0x49, 0x02, 0x01] + Array("WBA7L1100N7123456".utf8)
+            case 0x0A: return [0x49, 0x0A, 0x01] + Array("ECM\u{0}-EngineControl".utf8)
+            case 0x04: return [0x49, 0x04, 0x01] + Array("DEMO8FF0R7.2.1\u{0}\u{0}".utf8)
+            case 0x06: return [0x49, 0x06, 0x01, 0x1A, 0x2B, 0x3C, 0x4D]
+            default: return nil
+            }
         case 0x19: return DemoScenario.faults[target]
         default: return nil
         }

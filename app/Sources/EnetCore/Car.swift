@@ -33,6 +33,7 @@ public struct Probe: Codable, Sendable {
     public var freezeFrame: Snapshot
     public var freezeFrameTrigger: String?
     public var misfires: [Misfire] = []
+    public var identity: Identity?
     public var exchanges: [String: String]                  // replay capture (functional ones: JSON text)
 }
 
@@ -146,6 +147,28 @@ public actor Car {
         return out
     }
 
+    /// The car's identity: VIN and what it encodes, the engine unit's OBD identification, odometer.
+    public func identity() async throws -> Identity {
+        var id = Identity()
+        var vin: String?
+        if let r = try await ask(Address.engine, [0x22, 0xF1, 0x90]), r.count >= 20, r[0] == 0x62 { vin = text(r[3...]) }
+        if vin?.count != 17, let r = try await ask(Address.engine, [0x09, 0x02]), r.count >= 20, r[0] == 0x49 { vin = text(r.suffix(17)) }
+        if let vin, vin.count == 17 { VIN.decode(vin, into: &id) }
+        if let r = try await ask(Address.engine, [0x09, 0x0A]), r.count > 3, r[0] == 0x49 { id.ecuName = text(r[3...]) }
+        if let r = try await ask(Address.engine, [0x09, 0x04]), r.count > 3, r[0] == 0x49 {
+            let d = Array(r[3...])
+            id.calibrationIds = stride(from: 0, to: d.count - 15, by: 16).map { text(d[$0..<$0 + 16]) }.filter { !$0.isEmpty }
+        }
+        if let r = try await ask(Address.engine, [0x09, 0x06]), r.count > 3, r[0] == 0x49 {
+            let d = Array(r[3...])
+            id.cvns = stride(from: 0, to: d.count - 3, by: 4).map { d[$0..<$0 + 4].map { String(format: "%02X", $0) }.joined() }
+        }
+        let sup = try await supportedPids()
+        if sup.contains(0x1C), let r = try await ask(Address.engine, [0x01, 0x1C]), r.count >= 3, r[0] == 0x41 { id.obdStandard = obdStandardName(r[2]) }
+        if sup.contains(0xA6), let p = Pids.byKey["odometer"] { id.odometerKm = try await value(p) }
+        return id
+    }
+
     /// Misfire counters per cylinder (OBD mode 06), for the cylinders the engine unit reports.
     public func misfires() async throws -> [Misfire] {
         var sup = Set<UInt8>()
@@ -195,6 +218,7 @@ public actor Car {
                      obdStored: stored, obdPending: pending, faultDetails: details,
                      freezeFrame: ff, freezeFrameTrigger: trigger, exchanges: log)
         p.misfires = mis
+        p.identity = try? await identity()
         p.exchanges = log
         return p
     }

@@ -48,6 +48,7 @@ enum Section: String, CaseIterable, Identifiable {
 
     @Published private(set) var live: [Sample] = []
     @Published private(set) var misfires: [Misfire] = []
+    @Published private(set) var identity: Identity?
     @Published private(set) var liveOn = false
     private var liveTask: Task<Void, Never>?
 
@@ -89,7 +90,17 @@ enum Section: String, CaseIterable, Identifiable {
 
     /// One reading at connect: the overview shows the odometer, the live page has values at once.
     private func firstSnapshot() async {
-        if let car, let s = try? await car.snapshot() { live = [s] }
+        guard let car else { return }
+        identity = try? await car.identity()
+        if let s = try? await car.snapshot() { live = [s] }
+    }
+
+    /// A question for the owner's AI: the type code and year (no serial number).
+    func modelQuestion() -> String {
+        guard let id = identity, let vin = id.vin else { return "" }
+        let partial = String(vin.prefix(11)) + "******"
+        return t("Moje BMW: VIN \(partial), kod typu \(id.typeCode ?? "?"), rok modelowy \(id.modelYear.map(String.init) ?? "?"), sterownik silnika \(id.ecuName ?? "?"). Jaki to model, nadwozie i silnik?",
+                 "My BMW: VIN \(partial), type code \(id.typeCode ?? "?"), model year \(id.modelYear.map(String.init) ?? "?"), engine unit \(id.ecuName ?? "?"). Which model, body and engine is it?")
     }
 
     func disconnect() async {
@@ -97,6 +108,7 @@ enum Section: String, CaseIterable, Identifiable {
         stopRecording()
         await car?.close()
         car = nil
+        identity = nil
         connection = ""
         misfires = []
     }
@@ -187,6 +199,7 @@ enum Section: String, CaseIterable, Identifiable {
             self.connection = c.connection
             self.faults = try await c.faults()
             self.faultsAt = Date()
+            self.identity = try? await c.identity()
             self.section = .faults
         }
     }

@@ -20,6 +20,8 @@ public enum MCP {
          "inputSchema": ["type": "object", "properties": ["host": host]]],
         ["name": "engine_snapshot", "description": "One reading of the engine unit's OBD values now (rpm, temperatures, fuel trims, MAP, MAF if fitted, lambda, voltage).",
          "inputSchema": ["type": "object", "properties": ["host": host]]],
+        ["name": "vehicle_info", "description": "The car's identity now: VIN-derived maker, model year, BMW type code (VIN serial redacted), engine unit name, calibration ids, OBD standard, odometer. Use the type code and year to name the model.",
+         "inputSchema": ["type": "object", "properties": ["host": host]]],
         ["name": "list_captures", "description": "Saved probes (JSON) and logs (CSV).", "inputSchema": ["type": "object", "properties": [String: Any]()]],
         ["name": "read_capture", "description": "A saved probe: faults, supported values, snapshot, freeze frame.", "inputSchema": file],
         ["name": "analyze_log", "description": "Engine check of a saved log: warm-up, mixture / fuel trims, air mass meter, charging, idle vacuum, lambda.", "inputSchema": file],
@@ -51,6 +53,12 @@ public enum MCP {
         case "engine_snapshot":
             let c = try await car(args); defer { Task { await c.close() } }
             return try await c.snapshot()
+        case "vehicle_info":
+            let c = try await car(args); defer { Task { await c.close() } }
+            let id = try await c.identity()
+            return ["vin": id.vin.map(redactVIN) ?? NSNull(), "maker": id.maker ?? NSNull(), "model_year": id.modelYear ?? NSNull(),
+                    "type_code": id.typeCode ?? NSNull(), "plant_code": id.plantCode ?? NSNull(), "engine_unit": id.ecuName ?? NSNull(),
+                    "calibration_ids": id.calibrationIds, "obd_standard": id.obdStandard ?? NSNull(), "odometer_km": id.odometerKm ?? NSNull()] as [String: Any]
         case "list_captures":
             return Captures.list().map(\.lastPathComponent)
         case "read_capture":

@@ -208,7 +208,7 @@ final class DemoTests: XCTestCase {
         let f = try await car.faults()
         XCTAssertEqual(f.first?.code, "101F01")
         let p = try await car.probe()
-        XCTAssertEqual(p.vin, "WBADEMO0000000000")
+        XCTAssertEqual(p.vin, "WBA7L1100N7123456")
         XCTAssertEqual(p.obdStored, ["P0171"])
         let mis = try await car.misfires()
         XCTAssertEqual(mis.map(\.cylinder), [1, 2, 3, 4])
@@ -264,5 +264,28 @@ final class HardeningTests: XCTestCase {
         }
         let f = try await Car(transport: T(), connection: "t").faults()
         XCTAssertEqual(f.map(\.code), ["101F01"])      // 0x40 alone (not completed since clear) is not a fault
+    }
+}
+
+final class IdentityTests: XCTestCase {
+    func testVinDecoding() {
+        XCTAssertEqual(VIN.modelYear("N", now: 2026), 2022)
+        XCTAssertEqual(VIN.modelYear("L", now: 2026), 2020)
+        XCTAssertEqual(VIN.modelYear("A", now: 2026), 2010)
+        XCTAssertEqual(VIN.modelYear("9", now: 2026), 2009)
+        var id = Identity()
+        VIN.decode("WBA7L1100N7123456", into: &id)
+        XCTAssertEqual([id.maker, id.typeCode, id.plantCode, id.serial], ["BMW AG", "7L11", "7", "123456"])
+        XCTAssertEqual(id.modelYear, 2022)
+    }
+
+    func testDemoIdentity() async throws {
+        let id = try await Car.demo().identity()
+        XCTAssertEqual(id.vin, "WBA7L1100N7123456")
+        XCTAssertEqual(id.ecuName, "ECM-EngineControl")
+        XCTAssertEqual(id.calibrationIds, ["DEMO8FF0R7.2.1"])
+        XCTAssertEqual(id.cvns, ["1A2B3C4D"])
+        XCTAssertEqual(id.obdStandard, "EOBD (Europa)")
+        XCTAssertEqual(id.odometerKm, 48213)
     }
 }

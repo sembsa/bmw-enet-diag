@@ -238,6 +238,7 @@ struct Dashboard: View {
                          caption: m.isDemo ? t("symulowane auto", "simulated car") : m.connection)
                 }
             }
+            if let id = m.identity { VehicleCard(id: id) }
             GlassActions {
                 Button { m.section = .faults } label: { Label(t("Zobacz błędy", "View Faults"), systemImage: "list.bullet.rectangle") }
                 Button { m.section = .live; m.startLive() } label: { Label(t("Dane na żywo", "Live Data"), systemImage: "waveform.path.ecg") }
@@ -293,6 +294,43 @@ struct Dashboard: View {
                 } label: { Label(t("Ostatni pełny odczyt", "Last Full Read"), systemImage: "doc.text.magnifyingglass") }
             }
         }
+    }
+}
+
+struct VehicleCard: View {
+    @EnvironmentObject var m: Model
+    let id: Identity
+    @State var copied = false
+
+    var body: some View {
+        GroupBox {
+            HStack(alignment: .top, spacing: 28) {
+                Image(systemName: "car.side.fill").font(.system(size: 40)).foregroundStyle(.tint).frame(width: 56).padding(.top, 4)
+                Grid(alignment: .leading, horizontalSpacing: 18, verticalSpacing: 8) {
+                    GridRow {
+                        Text("VIN").foregroundStyle(.secondary)
+                        Text(id.vin ?? "–").font(.title3.monospaced().weight(.semibold)).textSelection(.enabled)
+                    }
+                    GridRow { Text(t("Producent", "Maker")).foregroundStyle(.secondary); Text(id.maker ?? "–") }
+                    GridRow { Text(t("Rok modelowy", "Model year")).foregroundStyle(.secondary); Text(id.modelYear.map(String.init) ?? "–") }
+                    GridRow { Text(t("Kod typu", "Type code")).foregroundStyle(.secondary); Text(id.typeCode ?? "–").monospaced() }
+                }
+                Grid(alignment: .leading, horizontalSpacing: 18, verticalSpacing: 8) {
+                    GridRow { Text(t("Sterownik silnika", "Engine unit")).foregroundStyle(.secondary); Text(id.ecuName ?? "–") }
+                    GridRow { Text(t("Oprogramowanie", "Software")).foregroundStyle(.secondary); Text(id.calibrationIds.joined(separator: ", ").ifEmpty("–")).monospaced().textSelection(.enabled) }
+                    GridRow { Text(t("Norma OBD", "OBD standard")).foregroundStyle(.secondary); Text(id.obdStandard ?? "–") }
+                    GridRow { Text(t("Przebieg", "Odometer")).foregroundStyle(.secondary); Text(id.odometerKm.map { "\(Int($0)) km" } ?? "–") }
+                }
+                Spacer(minLength: 0)
+                VStack(alignment: .trailing, spacing: 8) {
+                    Button { copy(id.vin ?? ""); copied = true } label: { Label(copied ? t("Skopiowano", "Copied") : t("Kopiuj VIN", "Copy VIN"), systemImage: copied ? "checkmark" : "doc.on.doc") }
+                    Button { copy(m.modelQuestion()) } label: { Label(t("Zapytaj AI o model", "Ask AI for the model"), systemImage: "sparkles") }
+                        .help(t("Kopiuje pytanie z kodem typu (bez numeru seryjnego) do wklejenia asystentowi", "Copies a question with the type code (no serial number) for your AI assistant"))
+                }
+                .buttonStyle(.glass)
+            }
+            .padding(14)
+        } label: { Label(t("Pojazd", "Vehicle"), systemImage: "car.fill").font(.headline).padding(.bottom, 2) }
     }
 }
 
