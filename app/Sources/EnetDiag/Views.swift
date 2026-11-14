@@ -73,7 +73,7 @@ struct MainToolbar: ToolbarContent {
                 .disabled(m.busy != nil)
             }
             ToolbarItem(placement: .primaryAction) {                 // always available, also during a read
-                Button { Task { await m.disconnect() } } label: { Label(t("Rozłącz", "Disconnect"), systemImage: "eject").labelStyle(.titleAndIcon) }
+                Button { Task { await m.disconnectByOwner() } } label: { Label(t("Rozłącz", "Disconnect"), systemImage: "eject").labelStyle(.titleAndIcon) }
                     .help(t("Zakończ połączenie z autem (⌘K)", "End the connection to the car (⌘K)"))
             }
         } else {
@@ -239,7 +239,7 @@ struct Dashboard: View {
                             .foregroundStyle(.secondary)
                     }
                     Spacer()
-                    Button { Task { await m.disconnect() } } label: { Label(t("Rozłącz", "Disconnect"), systemImage: "eject") }
+                    Button { Task { await m.disconnectByOwner() } } label: { Label(t("Rozłącz", "Disconnect"), systemImage: "eject") }
                         .buttonStyle(.glass).controlSize(.large)
                 }
                 Divider()
@@ -645,7 +645,9 @@ struct EnginePage: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(28)
         }
-        .task(id: m.connected) { if m.connected { m.startLive() } }      // the checklist needs moving values
+        .task(id: m.connected && m.checkStep == .prepare) {              // the checklist needs moving values
+            if m.connected && m.checkStep == .prepare { m.startLive() }
+        }
     }
 
     // MARK: 1 - get ready
@@ -679,8 +681,8 @@ struct EnginePage: View {
         let rpm = last["rpm"] ?? 0, coolant = last["coolant"], speed = last["speed"] ?? 0
         Card {
             Text(t("Przygotuj auto", "Get the car ready")).font(.title.weight(.semibold))
-            Text(t("Kontrola trwa około 4 minut: najpierw silnik pracuje na wolnych obrotach, potem przez minutę trzymasz 2500 obr/min. Aplikacja tylko czyta dane – niczego w aucie nie zmienia.",
-                   "The check takes about 4 minutes: first the engine idles, then you hold 2500 rpm for a minute. The app only reads data – it changes nothing in the car."))
+            Text(t("Kontrola trwa kilka minut: najpierw silnik pracuje na wolnych obrotach, potem przez minutę–dwie trzymasz 2500 obr/min. Aplikacja tylko czyta dane – niczego w aucie nie zmienia.",
+                   "The check takes a few minutes: first the engine idles, then you hold 2500 rpm for a minute or two. The app only reads data – it changes nothing in the car."))
                 .foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
             VStack(alignment: .leading, spacing: 14) {
                 check(t("Połączenie z autem", "Connection to the car"), m.connected,
@@ -733,6 +735,14 @@ struct EnginePage: View {
             : t("Sterownik jeszcze nie reguluje mieszanki – trzymaj", "The engine computer isn't regulating the mixture yet – hold")
     }
 
+    /// " · about 1 min 20 s left", from how fast this car answers (a real one is slower than the demo).
+    func timeLeft(_ samples: Int) -> String {
+        let ts = m.recorded.suffix(10).compactMap { $0["t"] }
+        guard ts.count > 1, samples > 0 else { return "" }
+        let s = Int(Double(samples) * (ts.last! - ts.first!) / Double(ts.count - 1))
+        return " · " + t("jeszcze ok. ", "about ") + (s >= 60 ? "\(s / 60) min " : "") + "\(s % 60 / 10 * 10) s" + t("", " left")
+    }
+
     func recordingCard(title: String, text: String, want: String, good: String, count: Int, of total: Int, @ViewBuilder extra: () -> some View) -> some View {
         let why = notCounting(want)
         return Card {
@@ -742,7 +752,7 @@ struct EnginePage: View {
             Label(why ?? good, systemImage: why == nil ? "checkmark.circle.fill" : "exclamationmark.circle.fill")
                 .font(.title2.weight(.semibold)).foregroundStyle(why == nil ? .green : .orange)
             ProgressView(value: Double(min(count, total)), total: Double(total)) {
-                Text(t("Postęp", "Progress") + ": \(min(count, total) * 100 / total) %").font(.headline.monospacedDigit())
+                Text(t("Postęp", "Progress") + ": \(min(count, total) * 100 / total) %" + timeLeft(total - count)).font(.headline.monospacedDigit())
             }
             .tint(why == nil ? Theme.blue : .orange)
             GroupBox {
@@ -769,15 +779,15 @@ struct EnginePage: View {
 
     var idle: some View {
         recordingCard(title: t("Wolne obroty", "Idle"),
-                      text: t("Nie dotykaj gazu. Zostaw silnik na wolnych obrotach, aż pasek dojdzie do końca (około 2 minut).",
-                              "Don't touch the pedal. Let the engine idle until the bar fills (about 2 minutes)."),
+                      text: t("Nie dotykaj gazu. Zostaw silnik na wolnych obrotach, aż pasek dojdzie do końca (kilka minut).",
+                              "Don't touch the pedal. Let the engine idle until the bar fills (a few minutes)."),
                       want: "idle", good: t("Nagrywam – tak trzymaj", "Recording – keep it like this"), count: m.idleCount, of: Model.idleNeeded) { EmptyView() }
     }
 
     var mid: some View {
         recordingCard(title: t("Trzymaj 2500 obr/min", "Hold 2500 rpm"),
-                      text: t("Auto stoi (P lub luz, hamulec postojowy). Wciśnij lekko gaz i trzymaj obroty w zielonym polu, aż pasek dojdzie do końca (około minuty).",
-                              "The car is parked (P or neutral, parking brake). Press the pedal lightly and keep the revs in the green zone until the bar fills (about a minute)."),
+                      text: t("Auto stoi (P lub luz, hamulec postojowy). Wciśnij lekko gaz i trzymaj obroty w zielonym polu, aż pasek dojdzie do końca (minuta–dwie).",
+                              "The car is parked (P or neutral, parking brake). Press the pedal lightly and keep the revs in the green zone until the bar fills (a minute or two)."),
                       want: "mid", good: t("Dobrze – trzymaj", "Good – hold it"), count: m.midCount, of: Model.midNeeded) {
             HStack(alignment: .center, spacing: 20) {
                 Text("\(Int(last["rpm"] ?? 0))").font(.system(size: 64, weight: .semibold, design: .rounded)).monospacedDigit()

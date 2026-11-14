@@ -32,7 +32,9 @@ import SwiftUI
             if !CommandLine.arguments.contains("--offline") { await model.connectDemo() }
             if model.section == .live { model.startLive() }
             if let i = CommandLine.arguments.firstIndex(of: "--engine-step"), i + 1 < CommandLine.arguments.count { model.seed(CommandLine.arguments[i + 1]) }
-            try? await Task.sleep(for: .seconds(4))
+            if CommandLine.arguments.contains("--record") { model.startRecording() }      // the real check, against the demo car
+            let wait = CommandLine.arguments.firstIndex(of: "--wait").flatMap { Int(CommandLine.arguments[safe: $0 + 1] ?? "") } ?? 4
+            try? await Task.sleep(for: .seconds(wait))
             host.layoutSubtreeIfNeeded()
             if let rep = host.bitmapImageRepForCachingDisplay(in: host.bounds) {
                 host.cacheDisplay(in: host.bounds, to: rep)
@@ -70,7 +72,7 @@ struct EnetDiagApp: App {
             }
             CommandMenu(t("Auto", "Car")) {
                 Button(model.connected ? t("Rozłącz", "Disconnect") : t("Połącz", "Connect")) {
-                    Task { model.connected ? await model.disconnect() : await model.connect() }
+                    Task { model.connected ? await model.disconnectByOwner() : await model.connect() }
                 }.keyboardShortcut("k")
                 Button(t("Wypróbuj demo", "Try the demo")) { Task { await model.connectDemo() } }
                     .keyboardShortcut("d", modifiers: [.command, .shift])
@@ -98,4 +100,8 @@ struct EnetDiagApp: App {
 /// Closing the window ends the app (one window, nothing left polling the car).
 final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { true }
+}
+
+extension Array {
+    subscript(safe i: Int) -> Element? { indices.contains(i) ? self[i] : nil }
 }

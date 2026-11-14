@@ -120,6 +120,12 @@ enum Section: String, CaseIterable, Identifiable {
                  "My BMW: VIN \(partial), type code \(id.typeCode ?? "?"), model year \(id.modelYear.map(String.init) ?? "?"), engine unit \(id.ecuName ?? "?"). Which model, body and engine is it?")
     }
 
+    /// Disconnect pressed: the Overview's start screen makes "not connected" plain (faults already read stay in Faults).
+    func disconnectByOwner() async {
+        await disconnect()
+        section = .overview
+    }
+
     /// The window shows "not connected" first; the socket is closed after, so a stuck link cannot hold the UI.
     func disconnect() async {
         stopLive()
