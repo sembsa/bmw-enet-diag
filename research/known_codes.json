@@ -1,0 +1,1552 @@
+{
+ "generated": "2026-11-14",
+ "entries": [
+  {
+   "address": "12",
+   "code": "101F01",
+   "unit": "DME/DDE engine",
+   "engines": [
+    "N55"
+   ],
+   "severity": "workshop",
+   "pl": {
+    "title": "Przepustnica a ciśnienie w kolektorze – niezgodność",
+    "what": "Silnik porównuje kąt otwarcia przepustnicy z ciśnieniem w kolektorze dolotowym i wynik się nie zgadza. Typowe przy nieszczelnym dolocie lub po programowaniu.",
+    "check": "Sprawdź węże dolotu i intercoolera, wężyk sterowania doładowaniem i uszczelkę pokrywy zaworów (test dymny). Jeśli wraca, serwis może wykonać adaptację opisaną w biuletynie BMW."
+   },
+   "en": {
+    "title": "Throttle angle vs intake pressure mismatch",
+    "what": "The engine compares throttle opening with intake manifold pressure and they disagree. Common with an intake/boost leak or after programming.",
+    "check": "Check intake and charge-pipe hoses, the boost control vacuum line and the valve cover gasket (smoke test). If it returns, a workshop can run the adaptation from BMW's bulletin."
+   },
+   "sources": [
+    "https://static.nhtsa.gov/odi/tsbs/2019/MC-10163029-9999.pdf"
+   ],
+   "confidence": "high"
+  },
+  {
+   "address": "12",
+   "code": "102002",
+   "unit": "DME/DDE engine",
+   "engines": [
+    "N20",
+    "N55"
+   ],
+   "severity": "workshop",
+   "pl": {
+    "title": "Masa powietrza zbyt niska (wiarygodność)",
+    "what": "Zmierzona ilość powietrza jest mniejsza niż oczekiwana. Często towarzyszy jej utrata mocy i komunikat o usterce napędu.",
+    "check": "Sprawdź szczelność dolotu i węży doładowania. Gdy kod wraca razem z kodami Valvetronic lub odpowietrzenia zbiornika, serwis powinien sprawdzić te układy i aktualizację oprogramowania silnika."
+   },
+   "en": {
+    "title": "Air mass too low (plausibility)",
+    "what": "Measured intake air mass is lower than expected. Often comes with power loss and a drivetrain warning.",
+    "check": "Check the intake and boost hoses for leaks. If it returns together with Valvetronic or tank-vent faults, have a workshop test those systems and check for an engine software update."
+   },
+   "sources": [
+    "https://static.nhtsa.gov/odi/tsbs/2016/MC-10151257-9999.pdf"
+   ],
+   "confidence": "high"
+  },
+  {
+   "address": "12",
+   "code": "120208",
+   "unit": "DME/DDE engine",
+   "engines": [],
+   "severity": "workshop",
+   "pl": {
+    "title": "Ciśnienie doładowania za wysokie",
+    "what": "Regulacja turbo wykryła ciśnienie wyższe niż zadane. Silnik może przejść w tryb awaryjny ze zmniejszoną mocą.",
+    "check": "Sprawdź wężyki podciśnienia i zawór/sterownik wastegate oraz czujnik ciśnienia doładowania. Jeśli wraca, konieczna diagnoza w serwisie (bywa też poprawka oprogramowania)."
+   },
+   "en": {
+    "title": "Boost pressure too high",
+    "what": "Turbo control saw more boost than requested. The engine may enter limp mode with reduced power.",
+    "check": "Check vacuum lines, the wastegate actuator and the boost pressure sensor. If it returns, have it diagnosed; BMW has also released software fixes for this on some engines."
+   },
+   "sources": [
+    "https://static.nhtsa.gov/odi/tsbs/2013/SB-10052357-5990.pdf",
+    "https://static.nhtsa.gov/odi/tsbs/2015/SB-10059004-8736.pdf"
+   ],
+   "confidence": "medium"
+  },
+  {
+   "address": "12",
+   "code": "120308",
+   "unit": "DME/DDE engine",
+   "engines": [
+    "N20",
+    "N55"
+   ],
+   "severity": "workshop",
+   "pl": {
+    "title": "Ciśnienie doładowania za niskie",
+    "what": "Turbo nie osiąga zadanego ciśnienia. Objawy: brak mocy, komunikat o usterce napędu.",
+    "check": "Najczęściej nieszczelny wąż doładowania lub intercooler, zapięcie węża, wastegate. Obejrzyj węże i opaski. Jeśli wszystko szczelne, a kod wraca – serwis i ewentualna aktualizacja oprogramowania."
+   },
+   "en": {
+    "title": "Boost pressure too low",
+    "what": "The turbo does not reach target boost. Symptoms: lack of power, drivetrain warning.",
+    "check": "Usually a leaking or popped charge pipe, intercooler or wastegate issue. Inspect hoses and clamps. If all is tight and it returns, see a workshop; a software update may also apply."
+   },
+   "sources": [
+    "https://static.nhtsa.gov/odi/tsbs/2016/MC-10151257-9999.pdf"
+   ],
+   "confidence": "high"
+  },
+  {
+   "address": "12",
+   "code": "120408",
+   "unit": "DME/DDE engine",
+   "engines": [
+    "B38",
+    "B48",
+    "N20",
+    "N55"
+   ],
+   "severity": "workshop",
+   "pl": {
+    "title": "Doładowanie wyłączone – blokada budowania ciśnienia",
+    "what": "Silnik wyłączył regulację doładowania po innym błędzie (np. VANOS, doładowanie). Moc jest ograniczona.",
+    "check": "To zwykle skutek innego błędu – najpierw obsłuż pozostałe kody w DME. Jeśli występuje sam i wraca, serwis powinien sprawdzić układ turbo i aktualność oprogramowania."
+   },
+   "en": {
+    "title": "Boost control switched off",
+    "what": "The engine disabled boost control after another fault (e.g. VANOS or boost). Power is limited.",
+    "check": "Usually a consequence of another fault – deal with the other DME codes first. If it appears alone and keeps returning, have the turbo system and software level checked."
+   },
+   "sources": [
+    "https://static.nhtsa.gov/odi/tsbs/2014/MC-10148145-9999.pdf",
+    "https://static.nhtsa.gov/odi/tsbs/2020/MC-10175267-9999.pdf"
+   ],
+   "confidence": "high"
+  },
+  {
+   "address": "12",
+   "code": "123432",
+   "unit": "DME/DDE engine",
+   "engines": [
+    "B58"
+   ],
+   "severity": "workshop",
+   "pl": {
+    "title": "Wastegate elektryczny – nieprawidłowa pozycja zamknięcia",
+    "what": "Adaptacja elektrycznego zaworu wastegate wykryła nieprawidłową pozycję krańcową. Może ograniczać moc.",
+    "check": "Serwis powinien sprawdzić dźwignię i mechanizm wastegate pod kątem korozji i zacięcia. Kod często wraca, dopóki mechanizm nie chodzi swobodnie."
+   },
+   "en": {
+    "title": "Electric wastegate – closed end position implausible",
+    "what": "Electric wastegate adaptation found an implausible closed end stop. Power may be limited.",
+    "check": "Have a workshop inspect the wastegate lever and linkage for corrosion and binding. It tends to return until the mechanism moves freely."
+   },
+   "sources": [
+    "https://static.nhtsa.gov/odi/tsbs/2024/MC-11008988-0001.pdf"
+   ],
+   "confidence": "high"
+  },
+  {
+   "address": "12",
+   "code": "123511",
+   "unit": "DME/DDE engine",
+   "engines": [
+    "B58"
+   ],
+   "severity": "workshop",
+   "pl": {
+    "title": "Wastegate elektryczny – ciężko chodzi",
+    "what": "Zawór wastegate turbosprężarki porusza się z oporem. Częsta przyczyna to korozja dźwigni.",
+    "check": "Wymaga serwisu: kontrola dźwigni i mechanizmu wastegate, ewentualnie naprawa wg biuletynu BMW. Nie ignoruj, jeśli moc jest ograniczona."
+   },
+   "en": {
+    "title": "Electric wastegate – stiff movement",
+    "what": "The turbo wastegate moves with resistance, often due to a corroded lever.",
+    "check": "Needs a workshop: inspect the wastegate lever and linkage and repair per BMW's bulletin. Don't ignore it if power is reduced."
+   },
+   "sources": [
+    "https://static.nhtsa.gov/odi/tsbs/2024/MC-11008988-0001.pdf"
+   ],
+   "confidence": "high"
+  },
+  {
+   "address": "12",
+   "code": "130104",
+   "unit": "DME/DDE engine",
+   "engines": [
+    "N20"
+   ],
+   "severity": "workshop",
+   "pl": {
+    "title": "VANOS dolotowy – wałek zablokowany",
+    "what": "Zmienne fazy rozrządu po stronie dolotu nie reagują – wałek rozrządu się nie przestawia. Spadek mocy, kontrolka silnika.",
+    "check": "Sprawdź poziom i stan oleju (zły olej lub szlam to częsta przyczyna). Następnie serwis: elektrozawory VANOS, ich filtry i okablowanie, a przy powrocie – mechanika rozrządu."
+   },
+   "en": {
+    "title": "Intake VANOS – camshaft stuck",
+    "what": "Intake variable cam timing does not respond – the camshaft does not move. Power loss and engine light.",
+    "check": "Check oil level and condition first (wrong or sludgy oil is a common cause). Then a workshop should check the VANOS solenoids, their screens and wiring, and timing mechanics if it returns."
+   },
+   "sources": [
+    "https://static.nhtsa.gov/odi/tsbs/2014/MC-10147706-9999.pdf"
+   ],
+   "confidence": "high"
+  },
+  {
+   "address": "12",
+   "code": "130108",
+   "unit": "DME/DDE engine",
+   "engines": [
+    "N20"
+   ],
+   "severity": "workshop",
+   "pl": {
+    "title": "VANOS dolotowy – nie osiąga pozycji",
+    "what": "Wałek dolotowy nie dochodzi do zadanego kąta. Może dać szarpanie, słabszą moc i kontrolkę silnika.",
+    "check": "Sprawdź poziom i jakość oleju, wymień olej przy zaległym serwisie. Potem diagnoza elektrozaworu VANOS (można zamienić zawory dolot/wydech i zobaczyć, czy błąd się przenosi)."
+   },
+   "en": {
+    "title": "Intake VANOS – position not reached",
+    "what": "The intake camshaft does not reach its target angle. Can cause hesitation, less power and an engine light.",
+    "check": "Check oil level and quality; change oil if overdue. Then diagnose the VANOS solenoid (swapping intake/exhaust solenoids shows whether the fault follows the part)."
+   },
+   "sources": [
+    "https://static.nhtsa.gov/odi/tsbs/2014/MC-10147706-9999.pdf",
+    "https://static.nhtsa.gov/odi/tsbs/2020/MC-10175267-9999.pdf"
+   ],
+   "confidence": "high"
+  },
+  {
+   "address": "12",
+   "code": "130304",
+   "unit": "DME/DDE engine",
+   "engines": [
+    "N20"
+   ],
+   "severity": "workshop",
+   "pl": {
+    "title": "VANOS wydechowy – wałek zablokowany",
+    "what": "Zmienne fazy po stronie wydechu nie działają – wałek wydechowy się nie przestawia.",
+    "check": "Sprawdź olej (poziom, przebieg od wymiany). Serwis powinien sprawdzić elektrozawór VANOS wydechu, jego okablowanie i zasilanie olejem, a przy powrocie – rozrząd."
+   },
+   "en": {
+    "title": "Exhaust VANOS – camshaft stuck",
+    "what": "Exhaust variable cam timing does not work – the exhaust camshaft does not move.",
+    "check": "Check the oil (level, time since change). A workshop should test the exhaust VANOS solenoid, its wiring and oil supply, and the timing if it returns."
+   },
+   "sources": [
+    "https://static.nhtsa.gov/odi/tsbs/2014/MC-10147706-9999.pdf"
+   ],
+   "confidence": "high"
+  },
+  {
+   "address": "12",
+   "code": "130308",
+   "unit": "DME/DDE engine",
+   "engines": [
+    "N20"
+   ],
+   "severity": "workshop",
+   "pl": {
+    "title": "VANOS wydechowy – nie osiąga pozycji",
+    "what": "Wałek wydechowy nie dochodzi do zadanego kąta. Często razem z 120408 i ograniczeniem mocy.",
+    "check": "Najpierw olej: poziom i świeżość. Typowa naprawa to elektrozawór VANOS wydechu (test przez zamianę z dolotowym) i wymiana oleju z filtrem. Jeśli wraca – serwis."
+   },
+   "en": {
+    "title": "Exhaust VANOS – position not reached",
+    "what": "The exhaust camshaft does not reach its target angle. Often appears with 120408 and reduced power.",
+    "check": "Start with the oil: level and freshness. Typical fix is the exhaust VANOS solenoid (test by swapping with intake) plus oil and filter change. If it returns, see a workshop."
+   },
+   "sources": [
+    "https://static.nhtsa.gov/odi/tsbs/2014/SB-10053485-8362.pdf",
+    "https://static.nhtsa.gov/odi/tsbs/2020/MC-10175267-9999.pdf"
+   ],
+   "confidence": "high"
+  },
+  {
+   "address": "12",
+   "code": "133B04",
+   "unit": "DME/DDE engine",
+   "engines": [
+    "N20",
+    "N55"
+   ],
+   "severity": "workshop",
+   "pl": {
+    "title": "Valvetronic – brak możliwości regulacji",
+    "what": "Układ zmiennego wzniosu zaworów nie może się regulować. Silnik może tracić moc i pracować nierówno.",
+    "check": "Wymaga serwisu: test silnika Valvetronic i czujnika położenia, potem nauka położeń krańcowych. Bywa też potrzebna aktualizacja oprogramowania silnika."
+   },
+   "en": {
+    "title": "Valvetronic – no adjustment possible",
+    "what": "The variable valve lift system cannot adjust. The engine may lose power and run rough.",
+    "check": "Needs a workshop: test the Valvetronic motor and sensor, then relearn end positions. A DME software update is sometimes also required."
+   },
+   "sources": [
+    "https://static.nhtsa.gov/odi/tsbs/2016/MC-10151257-9999.pdf"
+   ],
+   "confidence": "high"
+  },
+  {
+   "address": "12",
+   "code": "140010",
+   "unit": "DME/DDE engine",
+   "engines": [],
+   "severity": "workshop",
+   "pl": {
+    "title": "Wypadanie zapłonów – kilka cylindrów",
+    "what": "Silnik wykrył wypadanie zapłonów w więcej niż jednym cylindrze. Silnik może szarpać, kontrolka może migać.",
+    "check": "Przy migającej kontrolce jedź spokojnie i jak najszybciej do serwisu. Sprawdź świece i cewki, paliwo, nieszczelności dolotu; przy wielu cylindrach także zasilanie i akumulator."
+   },
+   "en": {
+    "title": "Misfire – multiple cylinders",
+    "what": "The engine detected misfires in more than one cylinder. It may shudder; the engine light may flash.",
+    "check": "If the light flashes, drive gently and get it checked soon. Check plugs and coils, fuel, intake leaks; with several cylinders also check supply voltage and battery."
+   },
+   "sources": [
+    "https://www.ecutesting.com/common-faults/bmw/bmw-1-series-misfire-fault/"
+   ],
+   "confidence": "low"
+  },
+  {
+   "address": "12",
+   "code": "140110",
+   "unit": "DME/DDE engine",
+   "engines": [],
+   "severity": "workshop",
+   "pl": {
+    "title": "Wypadanie zapłonów – cylinder 1",
+    "what": "Silnik wykrył wypadanie zapłonów w cylindrze 1. Podobnie 140210, 140310 itd. dla kolejnych cylindrów.",
+    "check": "Zamień cewkę z cylindra 1 z innym cylindrem i sprawdź, czy błąd się przenosi; sprawdź świecę. Jeśli błąd zostaje na tym cylindrze – wtryskiwacz lub kompresja, czyli serwis."
+   },
+   "en": {
+    "title": "Misfire – cylinder 1",
+    "what": "The engine detected misfires in cylinder 1. Codes 140210, 140310 etc. are the same for other cylinders.",
+    "check": "Swap the cylinder 1 coil with another cylinder and see if the fault follows; check the plug. If it stays on the same cylinder, suspect injector or compression – workshop."
+   },
+   "sources": [
+    "https://static.nhtsa.gov/odi/tsbs/2021/MC-10205613-9999.pdf"
+   ],
+   "confidence": "medium"
+  },
+  {
+   "address": "12",
+   "code": "140210",
+   "unit": "DME/DDE engine",
+   "engines": [],
+   "severity": "workshop",
+   "pl": {
+    "title": "Wypadanie zapłonów – cylinder 2",
+    "what": "Silnik wykrył wypadanie zapłonów w cylindrze 2.",
+    "check": "Zamień cewkę z cylindra 2 z innym cylindrem i sprawdź, czy błąd się przenosi; sprawdź świecę. Jeśli zostaje na tym cylindrze – wtryskiwacz lub kompresja, czyli serwis."
+   },
+   "en": {
+    "title": "Misfire – cylinder 2",
+    "what": "The engine detected misfires in cylinder 2.",
+    "check": "Swap the cylinder 2 coil with another cylinder and see if the fault follows; check the plug. If it stays put, suspect injector or compression – workshop."
+   },
+   "sources": [
+    "https://static.nhtsa.gov/odi/tsbs/2021/MC-10205613-9999.pdf"
+   ],
+   "confidence": "medium"
+  },
+  {
+   "address": "12",
+   "code": "140310",
+   "unit": "DME/DDE engine",
+   "engines": [],
+   "severity": "workshop",
+   "pl": {
+    "title": "Wypadanie zapłonów – cylinder 3",
+    "what": "Silnik wykrył wypadanie zapłonów w cylindrze 3.",
+    "check": "Zamień cewkę z cylindra 3 z innym cylindrem i sprawdź, czy błąd się przenosi; sprawdź świecę. Jeśli zostaje na tym cylindrze – wtryskiwacz lub kompresja, czyli serwis."
+   },
+   "en": {
+    "title": "Misfire – cylinder 3",
+    "what": "The engine detected misfires in cylinder 3.",
+    "check": "Swap the cylinder 3 coil with another cylinder and see if the fault follows; check the plug. If it stays put, suspect injector or compression – workshop."
+   },
+   "sources": [
+    "https://static.nhtsa.gov/odi/tsbs/2021/MC-10205613-9999.pdf"
+   ],
+   "confidence": "medium"
+  },
+  {
+   "address": "12",
+   "code": "140410",
+   "unit": "DME/DDE engine",
+   "engines": [],
+   "severity": "workshop",
+   "pl": {
+    "title": "Wypadanie zapłonów – cylinder 4",
+    "what": "Silnik wykrył wypadanie zapłonów w cylindrze 4.",
+    "check": "Zamień cewkę z cylindra 4 z innym cylindrem i sprawdź, czy błąd się przenosi; sprawdź świecę. Jeśli zostaje na tym cylindrze – wtryskiwacz lub kompresja, czyli serwis."
+   },
+   "en": {
+    "title": "Misfire – cylinder 4",
+    "what": "The engine detected misfires in cylinder 4.",
+    "check": "Swap the cylinder 4 coil with another cylinder and see if the fault follows; check the plug. If it stays put, suspect injector or compression – workshop."
+   },
+   "sources": [
+    "https://static.nhtsa.gov/odi/tsbs/2021/MC-10205613-9999.pdf"
+   ],
+   "confidence": "medium"
+  },
+  {
+   "address": "12",
+   "code": "191C02",
+   "unit": "DME/DDE engine",
+   "engines": [
+    "N20",
+    "N55"
+   ],
+   "severity": "watch",
+   "pl": {
+    "title": "Odpowietrzenie zbiornika – 2. punkt wlotu",
+    "what": "Układ odpowietrzenia zbiornika paliwa (oparów) działa nieprawidłowo w drugim punkcie wprowadzenia do dolotu.",
+    "check": "Sprawdź, czy korek wlewu jest dobrze dokręcony i czy wężyki odpowietrzenia są całe i podpięte. Skasuj i obserwuj; jeśli wraca – serwis (zawór odpowietrzenia, przewody)."
+   },
+   "en": {
+    "title": "Tank vent – 2nd inlet point malfunction",
+    "what": "The fuel vapour (tank vent) system is not working correctly at its second inlet point into the intake.",
+    "check": "Make sure the fuel cap is tight and vent hoses are intact and connected. Clear and watch; if it returns, have the purge valve and lines checked."
+   },
+   "sources": [
+    "https://static.nhtsa.gov/odi/tsbs/2016/MC-10151257-9999.pdf"
+   ],
+   "confidence": "high"
+  },
+  {
+   "address": "12",
+   "code": "1B8004",
+   "unit": "DME/DDE engine",
+   "engines": [],
+   "severity": "watch",
+   "pl": {
+    "title": "Czujnik temp. płynu na wylocie chłodnicy – porównanie",
+    "what": "Temperatury z czujników płynu chłodzącego nie zgadzają się ze sobą. Na niektórych X1 F48 kod zapisywał się błędnie bez kontrolki.",
+    "check": "Sprawdź poziom płynu chłodzącego. Jeśli kontrolka silnika się nie świeci, skasuj i obserwuj. Gdy wraca z kontrolką lub przegrzewaniem – serwis."
+   },
+   "en": {
+    "title": "Coolant temp at radiator outlet – comparison",
+    "what": "Coolant temperature sensors disagree with each other. On some early X1 F48 it was stored by mistake without a warning light.",
+    "check": "Check the coolant level. If no engine light is on, clear it and watch. If it returns with the light or overheating, see a workshop."
+   },
+   "sources": [
+    "https://static.nhtsa.gov/odi/tsbs/2018/MC-10138383-9999.pdf"
+   ],
+   "confidence": "medium"
+  },
+  {
+   "address": "12",
+   "code": "1C0102",
+   "unit": "DME/DDE engine",
+   "engines": [],
+   "severity": "workshop",
+   "pl": {
+    "title": "Ciśnienie oleju za niskie (statycznie)",
+    "what": "Sterownik silnika uznał ciśnienie oleju za zbyt niskie. Bywa też zapisywany błędnie przez oprogramowanie.",
+    "check": "Natychmiast sprawdź poziom oleju. Przy czerwonej kontrolce oleju zatrzymaj silnik. Jeśli poziom jest dobry i brak objawów, serwis sprawdzi czujnik i aktualizację oprogramowania."
+   },
+   "en": {
+    "title": "Oil pressure too low (static)",
+    "what": "The engine computer judged oil pressure too low. Some software versions also stored it by mistake.",
+    "check": "Check the oil level now. With a red oil warning, stop the engine. If the level is fine and there are no symptoms, have a workshop check the sensor and software level."
+   },
+   "sources": [
+    "https://static.nhtsa.gov/odi/tsbs/2018/MC-10149572-9999.pdf"
+   ],
+   "confidence": "high"
+  },
+  {
+   "address": "12",
+   "code": "1C4002",
+   "unit": "DME/DDE engine",
+   "engines": [],
+   "severity": "workshop",
+   "pl": {
+    "title": "Poziom oleju za niski",
+    "what": "Elektroniczny pomiar wykrył za mało oleju w silniku. Na części aut brakowało przy tym komunikatu w zegarach.",
+    "check": "Sprawdź poziom oleju w iDrive (stan pojazdu) i dolej właściwy olej. Szukaj wycieków i spalania oleju. Jeśli poziom jest dobry, a kod wraca – serwis."
+   },
+   "en": {
+    "title": "Engine oil level too low",
+    "what": "The electronic oil sensor measured too little oil. On some cars the cluster did not show a warning for it.",
+    "check": "Check the oil level in iDrive (vehicle status) and top up with the correct oil. Look for leaks or oil burning. If the level is fine and it returns, see a workshop."
+   },
+   "sources": [
+    "https://static.nhtsa.gov/odi/tsbs/2019/MC-10160329-9999.pdf",
+    "https://static.nhtsa.gov/odi/tsbs/2017/MC-10136735-9999.pdf"
+   ],
+   "confidence": "high"
+  },
+  {
+   "address": "12",
+   "code": "1D2401",
+   "unit": "DME/DDE engine",
+   "engines": [
+    "B36",
+    "B38",
+    "B46",
+    "B48"
+   ],
+   "severity": "workshop",
+   "pl": {
+    "title": "Termostat mapowy – zwarcie do plusa",
+    "what": "Grzałka termostatu sterowanego mapą ma zwarcie do plusa. Może pojawić się komunikat o przegrzaniu.",
+    "check": "Sprawdź poziom i kolor płynu chłodzącego (przebarwiony płyn to sygnał ostrzegawczy). Wymaga serwisu: kontrola wiązki termostatu, zwykle wymiana termostatu z pompą."
+   },
+   "en": {
+    "title": "Map thermostat – short to positive",
+    "what": "The heater of the map-controlled thermostat is shorted to positive. An overheating message may appear.",
+    "check": "Check coolant level and colour (discoloured coolant is a warning sign). Needs a workshop: check the thermostat wiring; usually the thermostat/water pump unit is replaced."
+   },
+   "sources": [
+    "https://static.nhtsa.gov/odi/tsbs/2016/MC-10147576-9999.pdf",
+    "https://static.nhtsa.gov/odi/tsbs/2016/MC-10146810-9999.pdf"
+   ],
+   "confidence": "high"
+  },
+  {
+   "address": "12",
+   "code": "1D2402",
+   "unit": "DME/DDE engine",
+   "engines": [
+    "B36",
+    "B38",
+    "B46",
+    "B48"
+   ],
+   "severity": "workshop",
+   "pl": {
+    "title": "Termostat mapowy – zwarcie do masy",
+    "what": "Obwód grzałki termostatu mapowego ma zwarcie do masy. Silnik może się przegrzewać lub źle nagrzewać.",
+    "check": "Sprawdź poziom i kolor płynu chłodzącego. Wymaga serwisu: uszkodzona izolacja wiązki pozwala płynowi dostać się do przewodu; zwykle wymiana termostatu z pompą."
+   },
+   "en": {
+    "title": "Map thermostat – short to ground",
+    "what": "The map thermostat heater circuit is shorted to ground. The engine may overheat or warm up poorly.",
+    "check": "Check coolant level and colour. Needs a workshop: damaged wiring insulation can let coolant into the harness; the thermostat/pump unit is usually replaced."
+   },
+   "sources": [
+    "https://static.nhtsa.gov/odi/tsbs/2016/MC-10147576-9999.pdf",
+    "https://static.nhtsa.gov/odi/tsbs/2016/MC-10146810-9999.pdf"
+   ],
+   "confidence": "high"
+  },
+  {
+   "address": "12",
+   "code": "1D2404",
+   "unit": "DME/DDE engine",
+   "engines": [
+    "B36",
+    "B38",
+    "B46",
+    "B48"
+   ],
+   "severity": "workshop",
+   "pl": {
+    "title": "Termostat mapowy – przerwa w obwodzie",
+    "what": "Sterownik nie widzi grzałki termostatu mapowego (przerwany obwód).",
+    "check": "Sprawdź wtyczkę termostatu i poziom płynu. Wymaga serwisu: diagnoza wiązki i grzałki, zwykle wymiana termostatu z pompą."
+   },
+   "en": {
+    "title": "Map thermostat – open circuit",
+    "what": "The engine computer cannot see the map thermostat heater (circuit open).",
+    "check": "Check the thermostat connector and coolant level. Needs a workshop: diagnose wiring and heater; usually the thermostat/pump unit is replaced."
+   },
+   "sources": [
+    "https://static.nhtsa.gov/odi/tsbs/2016/MC-10147576-9999.pdf",
+    "https://static.nhtsa.gov/odi/tsbs/2016/MC-10146810-9999.pdf"
+   ],
+   "confidence": "high"
+  },
+  {
+   "address": "12",
+   "code": "20E120",
+   "unit": "DME/DDE engine",
+   "engines": [],
+   "severity": "workshop",
+   "pl": {
+    "title": "Odma skrzyni korbowej – wąż odłączony/uszkodzony",
+    "what": "Sterownik wykrył, że wąż odpowietrzenia skrzyni korbowej nie jest podłączony lub jest uszkodzony. Świeci kontrolka silnika.",
+    "check": "Obejrzyj wąż odmy – czy jest wpięty i nie pęknięty. Jeśli jest w porządku, a kod wraca, serwis powinien sprawdzić układ i oprogramowanie."
+   },
+   "en": {
+    "title": "Crankcase vent hose – not connected / faulty",
+    "what": "The engine computer detected the crankcase ventilation hose as disconnected or damaged. Engine light is on.",
+    "check": "Inspect the crankcase vent hose – seated and not cracked. If it looks fine and the code returns, have the system and software checked."
+   },
+   "sources": [
+    "https://static.nhtsa.gov/odi/tsbs/2018/MC-10145285-9999.pdf"
+   ],
+   "confidence": "medium"
+  },
+  {
+   "address": "12",
+   "code": "213901",
+   "unit": "DME/DDE engine",
+   "engines": [],
+   "severity": "watch",
+   "pl": {
+    "title": "Zarządzanie energią – odłączanie odbiorników",
+    "what": "Przy niskim napięciu auto ograniczyło lub wyłączyło część odbiorników prądu (np. ogrzewanie szyby). Często razem z komunikatem o rozładowaniu.",
+    "check": "Naładuj akumulator ładowarką i sprawdź jego stan. Skasuj i obserwuj. Jeśli wraca, sprawdź akumulator, ładowanie i upływ prądu (diagnoza energetyczna w serwisie)."
+   },
+   "en": {
+    "title": "Power management – consumers reduced/switched off",
+    "what": "At low voltage the car reduced or shut off some electrical loads (e.g. heated screen). Often with a battery discharge message.",
+    "check": "Charge the battery with a charger and test it. Clear and watch. If it returns, check battery, charging and parasitic drain (energy diagnosis at a workshop)."
+   },
+   "sources": [
+    "https://static.nhtsa.gov/odi/tsbs/2015/MC-10147115-9999.pdf"
+   ],
+   "confidence": "medium"
+  },
+  {
+   "address": "12",
+   "code": "213A2B",
+   "unit": "DME/DDE engine",
+   "engines": [
+    "B46",
+    "B48",
+    "B58"
+   ],
+   "severity": "watch",
+   "pl": {
+    "title": "Adaptacja koła impulsowego wału – błąd",
+    "what": "Nauka koła impulsowego wału korbowego (do wykrywania wypadania zapłonów) się nie udała. Bez objawów w jeździe; może zapalić kontrolkę.",
+    "check": "Zwykle problem kalibracji oprogramowania. Skasuj i obserwuj; jeśli wraca z kontrolką, serwis może zaktualizować oprogramowanie silnika."
+   },
+   "en": {
+    "title": "Crank increment wheel adaptation faulty",
+    "what": "The crankshaft wheel learning (used for misfire detection) failed. No drivability symptoms; may light the MIL.",
+    "check": "Usually a software calibration issue. Clear and watch; if it returns with the engine light, a workshop can update the engine software."
+   },
+   "sources": [
+    "https://static.nhtsa.gov/odi/tsbs/2020/MC-10171479-9999.pdf"
+   ],
+   "confidence": "high"
+  },
+  {
+   "address": "12",
+   "code": "21A02D",
+   "unit": "DME/DDE engine",
+   "engines": [
+    "B46",
+    "B58"
+   ],
+   "severity": "watch",
+   "pl": {
+    "title": "Korekta wzniosu zaworów na biegu jałowym",
+    "what": "Silnik koryguje wznios zaworów na jałowym. Może towarzyszyć temu szarpanie lub zawahanie przy ruszaniu.",
+    "check": "Najpierw obsłuż inne kody w silniku. Jeśli to jedyny błąd, BMW zaleca aktualizację oprogramowania silnika i naukę Valvetronic w serwisie – bez wymiany części."
+   },
+   "en": {
+    "title": "Valve lift correction at idle",
+    "what": "The engine is correcting valve lift at idle. May come with roughness or hesitation when pulling away.",
+    "check": "Deal with other engine faults first. If it's the only one, BMW's fix is a DME software update plus Valvetronic relearn at a workshop – no parts replacement."
+   },
+   "sources": [
+    "https://static.nhtsa.gov/odi/tsbs/2019/MC-10165279-9999.pdf",
+    "https://static.nhtsa.gov/odi/tsbs/2018/MC-10138380-9999.pdf"
+   ],
+   "confidence": "high"
+  },
+  {
+   "address": "12",
+   "code": "10B101",
+   "unit": "DME/DDE engine",
+   "engines": [],
+   "severity": "watch",
+   "pl": {
+    "title": "Czujnik temperatury zewnętrznej – zwarcie do plusa",
+    "what": "Czujnik temperatury zewnętrznej (w zderzaku/lusterku) ma zwarcie. Termometr w zegarach może pokazywać bzdury.",
+    "check": "Obejrzyj czujnik i wtyczkę. Na X3 F25 przyczyną bywa wiązka zalana płynem do spryskiwaczy przy przegrodzie – jeśli jest wiele kodów naraz, sprawdź to w serwisie."
+   },
+   "en": {
+    "title": "Outside temperature sensor – short to positive",
+    "what": "The outside temperature sensor circuit is shorted. The cluster temperature may read wrong.",
+    "check": "Inspect the sensor and plug. On X3 F25 a harness soaked by washer fluid near the bulkhead is a known cause – if many codes appear at once, have that checked."
+   },
+   "sources": [
+    "https://static.nhtsa.gov/odi/tsbs/2020/MC-10174024-9999.pdf"
+   ],
+   "confidence": "medium"
+  },
+  {
+   "address": "12",
+   "code": "034AEF",
+   "unit": "DME/DDE engine",
+   "engines": [
+    "B48"
+   ],
+   "severity": "workshop",
+   "pl": {
+    "title": "Zimny start – układ wydechowy nie do sterowania",
+    "what": "Strategia rozgrzewania katalizatora po zimnym starcie nie mogła zostać zrealizowana. Świeci kontrolka silnika.",
+    "check": "Kod dotyczy nowszych B48 (np. X2 U10). Serwis powinien sprawdzić biuletyn BMW i aktualizację oprogramowania silnika."
+   },
+   "en": {
+    "title": "Cold start exhaust heating not controllable",
+    "what": "The catalyst warm-up strategy after a cold start could not be carried out. Engine light is on.",
+    "check": "Seen on newer B48 cars (e.g. X2 U10). A workshop should check BMW's bulletin and the engine software level."
+   },
+   "sources": [
+    "https://static.nhtsa.gov/odi/tsbs/2026/MC-11026948-0001.pdf"
+   ],
+   "confidence": "medium"
+  },
+  {
+   "address": "12",
+   "code": "CDC152",
+   "unit": "DME/DDE engine",
+   "engines": [],
+   "severity": "watch",
+   "pl": {
+    "title": "Brak komunikatu przebiegu na PT-CAN",
+    "what": "Sterownik silnika nie dostaje komunikatu z przebiegiem od zegarów. Świeci kontrolka silnika, ale auto jeździ normalnie.",
+    "check": "Przyczyną bywa oprogramowanie zegarów. Skasuj i obserwuj; jeśli wraca, serwis może zaktualizować oprogramowanie. Sprawdź też akumulator."
+   },
+   "en": {
+    "title": "Odometer message missing on PT-CAN",
+    "what": "The engine computer is not receiving the mileage message from the cluster. MIL on, but the car drives normally.",
+    "check": "Cluster software is a known cause. Clear and watch; if it returns, a workshop can update the software. Also check the battery."
+   },
+   "sources": [
+    "https://static.nhtsa.gov/odi/tsbs/2020/MC-10186224-9999.pdf"
+   ],
+   "confidence": "medium"
+  },
+  {
+   "address": "12",
+   "code": "245700",
+   "unit": "DME/DDE engine",
+   "engines": [
+    "N47",
+    "N57"
+   ],
+   "severity": "workshop",
+   "pl": {
+    "title": "Filtr DPF mocno obciążony sadzą",
+    "what": "Filtr cząstek stałych jest mocno zapchany, ciśnienie spalin przed nim jest wysokie. Częsta przyczyna: same krótkie trasy.",
+    "check": "Jeśli nie ma innych błędów, przejedź 20–30 min trasą przy stałej prędkości, by umożliwić wypalanie. Jeśli kod zostaje lub wraca – serwis (czujniki, wypalanie serwisowe)."
+   },
+   "en": {
+    "title": "DPF heavily loaded with soot",
+    "what": "The diesel particulate filter is heavily loaded and exhaust backpressure is high. Common cause: only short trips.",
+    "check": "If no other faults, drive 20–30 min at steady motorway speed to allow regeneration. If it stays or returns, see a workshop (sensors, service regeneration)."
+   },
+   "sources": [
+    "https://www.carcomplaints.com/BMW/328/2015/tsb/tsb-b180310.shtml"
+   ],
+   "confidence": "high"
+  },
+  {
+   "address": "12",
+   "code": "245800",
+   "unit": "DME/DDE engine",
+   "engines": [
+    "N47",
+    "N57"
+   ],
+   "severity": "workshop",
+   "pl": {
+    "title": "Filtr DPF silnie zanieczyszczony",
+    "what": "Ciśnienie spalin przed filtrem DPF przekracza maksimum. Silnik może ograniczyć moc.",
+    "check": "Nie jeździj długo na krótkich trasach. Wymaga serwisu: sprawdzenie czujnika różnicy ciśnień i przewodów, ewentualnie wypalanie serwisowe lub wymiana filtra."
+   },
+   "en": {
+    "title": "DPF heavily contaminated",
+    "what": "Exhaust backpressure before the DPF is above maximum. The engine may reduce power.",
+    "check": "Avoid more short trips. Needs a workshop: check the differential pressure sensor and lines, then service regeneration or filter replacement."
+   },
+   "sources": [
+    "https://www.carcomplaints.com/BMW/328/2015/tsb/tsb-b180310.shtml"
+   ],
+   "confidence": "high"
+  },
+  {
+   "address": "12",
+   "code": "24CE00",
+   "unit": "DME/DDE engine",
+   "engines": [
+    "N47",
+    "N57"
+   ],
+   "severity": "workshop",
+   "pl": {
+    "title": "Przepływomierz – za dużo powietrza względem obliczeń",
+    "what": "Zmierzona masa powietrza jest wyraźnie większa niż wyliczona przez sterownik. Bywa związane z EGR lub przepływomierzem.",
+    "check": "Sprawdź węże dolotu i filtr powietrza. Serwis powinien sprawdzić przepływomierz i zawór/chłodnicę EGR; dla N47T/N57T BMW przedłużało gwarancję na chłodnicę EGR."
+   },
+   "en": {
+    "title": "MAF – measured air higher than calculated",
+    "what": "Measured air mass is clearly higher than the engine computer's model. Often linked to EGR or the air mass meter.",
+    "check": "Check intake hoses and air filter. Have a workshop check the MAF and the EGR valve/cooler; BMW extended EGR cooler coverage on N47T/N57T in some markets."
+   },
+   "sources": [
+    "https://static.nhtsa.gov/odi/tsbs/2020/MC-10175261-9999.pdf"
+   ],
+   "confidence": "high"
+  },
+  {
+   "address": "12",
+   "code": "27F000",
+   "unit": "DME/DDE engine",
+   "engines": [
+    "N47",
+    "N57"
+   ],
+   "severity": "workshop",
+   "pl": {
+    "title": "Wąż doładowania spadł (wykryte na jałowym)",
+    "what": "Kontrola na biegu jałowym wskazuje, że wąż powietrza doładowania mógł spaść lub jest nieszczelny.",
+    "check": "Zajrzyj pod osłony: czy węże intercoolera są wpięte i całe, a opaski/zatrzaski trzymają. Jeśli wszystko w porządku, a kod wraca – serwis."
+   },
+   "en": {
+    "title": "Charge air hose came off (idle check)",
+    "what": "The idle monitor indicates a boost hose may have come off or is leaking.",
+    "check": "Look under the covers: intercooler hoses seated and intact, clips holding. If all is fine and it returns, see a workshop."
+   },
+   "sources": [
+    "https://static.nhtsa.gov/odi/tsbs/2020/MC-10175261-9999.pdf"
+   ],
+   "confidence": "high"
+  },
+  {
+   "address": "12",
+   "code": "290900",
+   "unit": "DME/DDE engine",
+   "engines": [
+    "N47"
+   ],
+   "severity": "workshop",
+   "pl": {
+    "title": "EGR – niezgodność masy powietrza",
+    "what": "Ilość powietrza i spalin recyrkulowanych przez EGR nie pasuje do obliczeń. Może dawać dymienie lub słabszą moc.",
+    "check": "Sprawdź szczelność dolotu. Serwis: zawór EGR, chłodnica EGR, przepływomierz. Sprawdź, czy auto nie jest objęte akcją/przedłużoną gwarancją na chłodnicę EGR."
+   },
+   "en": {
+    "title": "EGR – air mass flow plausibility",
+    "what": "Fresh air vs recirculated exhaust flow does not match the model. Can cause smoke or less power.",
+    "check": "Check the intake for leaks. Workshop: EGR valve, EGR cooler, MAF. Check whether a campaign or extended EGR cooler warranty applies to the car."
+   },
+   "sources": [
+    "https://static.nhtsa.gov/odi/tsbs/2016/MC-10147004-9999.pdf",
+    "https://static.nhtsa.gov/odi/tsbs/2020/MC-10175261-9999.pdf"
+   ],
+   "confidence": "high"
+  },
+  {
+   "address": "12",
+   "code": "29EB00",
+   "unit": "DME/DDE engine",
+   "engines": [
+    "N57"
+   ],
+   "severity": "workshop",
+   "pl": {
+    "title": "Chłodzenie EGR – klapa obejścia lub wydajność",
+    "what": "Klapa obejścia chłodnicy EGR nie działa lub chłodnica słabo chłodzi. Świeci kontrolka silnika.",
+    "check": "Wymaga serwisu: test klapy obejścia i chłodnicy EGR. Obserwuj poziom płynu chłodzącego – jego ubytek przy chłodnicy EGR jest poważny."
+   },
+   "en": {
+    "title": "EGR cooling – bypass flap or efficiency",
+    "what": "The EGR cooler bypass flap is faulty or the cooler is not cooling enough. Engine light is on.",
+    "check": "Needs a workshop: test the bypass flap and EGR cooler. Watch the coolant level – coolant loss at the EGR cooler is serious."
+   },
+   "sources": [
+    "https://static.nhtsa.gov/odi/tsbs/2014/MC-10148216-9999.pdf"
+   ],
+   "confidence": "high"
+  },
+  {
+   "address": "12",
+   "code": "244C00",
+   "unit": "DME/DDE engine",
+   "engines": [
+    "N57"
+   ],
+   "severity": "workshop",
+   "pl": {
+    "title": "Ciśnienie doładowania za niskie (diesel)",
+    "what": "Regulacja doładowania nie osiąga zadanego ciśnienia. Silnik może ograniczyć moc.",
+    "check": "Sprawdź węże i intercooler pod kątem pęknięć i spadniętych złączy. Potem serwis: turbosprężarka, nastawnik, czujnik ciśnienia, EGR."
+   },
+   "en": {
+    "title": "Boost pressure too low (diesel)",
+    "what": "Boost control cannot reach target pressure. The engine may cut power.",
+    "check": "Check hoses and intercooler for cracks and popped joints. Then a workshop: turbo, actuator, boost sensor, EGR."
+   },
+   "sources": [
+    "https://static.nhtsa.gov/odi/tsbs/2025/MC-11021811-0001.pdf"
+   ],
+   "confidence": "medium"
+  },
+  {
+   "address": "12",
+   "code": "2BB700",
+   "unit": "DME/DDE engine",
+   "engines": [
+    "N47",
+    "N57"
+   ],
+   "severity": "workshop",
+   "pl": {
+    "title": "Czujnik cząstek stałych – zatkana rurka ochronna",
+    "what": "Rurka ochronna czujnika cząstek stałych (za filtrem DPF) jest zatkana. Kontrolka silnika.",
+    "check": "Wymaga serwisu: diagnoza czujnika cząstek. Sprawdź, czy auto nie jest objęte przedłużoną gwarancją na ten czujnik."
+   },
+   "en": {
+    "title": "Particulate sensor – protective tube clogged",
+    "what": "The particulate sensor protection tube (after the DPF) is clogged. Engine light on.",
+    "check": "Needs a workshop: diagnose the particulate sensor. Check whether an extended warranty for this sensor applies."
+   },
+   "sources": [
+    "https://static.nhtsa.gov/odi/tsbs/2014/MC-10148115-9999.pdf",
+    "https://static.nhtsa.gov/odi/tsbs/2019/MC-10160239-9999.pdf"
+   ],
+   "confidence": "high"
+  },
+  {
+   "address": "12",
+   "code": "297200",
+   "unit": "DME/DDE engine",
+   "engines": [
+    "N47"
+   ],
+   "severity": "workshop",
+   "pl": {
+    "title": "Poziom oleju za niski (diesel)",
+    "what": "Czujnik wykrył za niski poziom oleju. Na N47T zdarzało się to błędnie po długiej jeździe autostradą.",
+    "check": "Sprawdź poziom oleju i dolej, jeśli trzeba. Jeśli poziom był dobry, a komunikat wraca, serwis może zaktualizować oprogramowanie silnika."
+   },
+   "en": {
+    "title": "Engine oil level too low (diesel)",
+    "what": "The sensor reported low oil level. On N47T it was also set falsely after long motorway drives.",
+    "check": "Check the oil level and top up if needed. If the level was fine and the message returns, a workshop can update the engine software."
+   },
+   "sources": [
+    "https://static.nhtsa.gov/odi/tsbs/2015/MC-10147238-9999.pdf"
+   ],
+   "confidence": "high"
+  },
+  {
+   "address": "29",
+   "code": "48069E",
+   "unit": "DSC brakes",
+   "engines": [],
+   "severity": "workshop",
+   "pl": {
+    "title": "RDC – nie można skalibrować położenia kół",
+    "what": "System kontroli ciśnienia w oponach nie potrafi przypisać czujników do kół.",
+    "check": "Sprawdź ciśnienie we wszystkich kołach i zresetuj RDC w iDrive, potem jedź kilkanaście minut. Nie kasuj go „na ślepo”; jeśli nie ustępuje – serwis (antena/odbiornik RDC)."
+   },
+   "en": {
+    "title": "TPMS – cannot calibrate wheel positions",
+    "what": "The tyre pressure system cannot assign the wheel sensors to their positions.",
+    "check": "Check all tyre pressures, reset TPMS in iDrive and drive 10–20 min. If it persists, have the receiver/antenna checked at a workshop."
+   },
+   "sources": [
+    "https://static.nhtsa.gov/odi/tsbs/2015/MC-10147243-9999.pdf"
+   ],
+   "confidence": "high"
+  },
+  {
+   "address": "29",
+   "code": "4806B8",
+   "unit": "DSC brakes",
+   "engines": [],
+   "severity": "workshop",
+   "pl": {
+    "title": "RDC – brak sygnału z koła przedniego lewego",
+    "what": "Odbiornik nie słyszy czujnika ciśnienia w przednim lewym kole. Podobne kody: 4806DA (PP), 4806F0 (TL), 4806F4 (TP).",
+    "check": "Sprawdź ciśnienie w tym kole i czy w kole jest czujnik (np. koła zimowe). Słaba bateria czujnika lub odbiornik to typowe przyczyny – serwis lub wulkanizacja z testerem TPMS."
+   },
+   "en": {
+    "title": "TPMS – no signal from front left wheel",
+    "what": "The receiver hears nothing from the front-left tyre sensor. Similar: 4806DA (FR), 4806F0 (RL), 4806F4 (RR).",
+    "check": "Check that tyre's pressure and that the wheel has a sensor (e.g. winter set). A weak sensor battery or the receiver are typical – tyre shop with a TPMS tool or workshop."
+   },
+   "sources": [
+    "https://static.nhtsa.gov/odi/tsbs/2015/MC-10147243-9999.pdf"
+   ],
+   "confidence": "high"
+  },
+  {
+   "address": "29",
+   "code": "4806DA",
+   "unit": "DSC brakes",
+   "engines": [],
+   "severity": "workshop",
+   "pl": {
+    "title": "RDC – brak sygnału z koła przedniego prawego",
+    "what": "Odbiornik nie słyszy czujnika ciśnienia w przednim prawym kole.",
+    "check": "Sprawdź ciśnienie w tym kole i czy w kole jest czujnik. Typowo słaba bateria czujnika lub odbiornik – wulkanizacja z testerem TPMS albo serwis."
+   },
+   "en": {
+    "title": "TPMS – no signal from front right wheel",
+    "what": "The receiver hears nothing from the front-right tyre sensor.",
+    "check": "Check that tyre's pressure and that the wheel has a sensor. Typically a weak sensor battery or the receiver – tyre shop with a TPMS tool or workshop."
+   },
+   "sources": [
+    "https://static.nhtsa.gov/odi/tsbs/2015/MC-10147243-9999.pdf"
+   ],
+   "confidence": "high"
+  },
+  {
+   "address": "29",
+   "code": "4806F0",
+   "unit": "DSC brakes",
+   "engines": [],
+   "severity": "workshop",
+   "pl": {
+    "title": "RDC – brak sygnału z koła tylnego lewego",
+    "what": "Odbiornik nie słyszy czujnika ciśnienia w tylnym lewym kole.",
+    "check": "Sprawdź ciśnienie w tym kole i czy w kole jest czujnik. Typowo słaba bateria czujnika lub odbiornik – wulkanizacja z testerem TPMS albo serwis."
+   },
+   "en": {
+    "title": "TPMS – no signal from rear left wheel",
+    "what": "The receiver hears nothing from the rear-left tyre sensor.",
+    "check": "Check that tyre's pressure and that the wheel has a sensor. Typically a weak sensor battery or the receiver – tyre shop with a TPMS tool or workshop."
+   },
+   "sources": [
+    "https://static.nhtsa.gov/odi/tsbs/2015/MC-10147243-9999.pdf"
+   ],
+   "confidence": "high"
+  },
+  {
+   "address": "29",
+   "code": "4806F4",
+   "unit": "DSC brakes",
+   "engines": [],
+   "severity": "workshop",
+   "pl": {
+    "title": "RDC – brak sygnału z koła tylnego prawego",
+    "what": "Odbiornik nie słyszy czujnika ciśnienia w tylnym prawym kole.",
+    "check": "Sprawdź ciśnienie w tym kole i czy w kole jest czujnik. Typowo słaba bateria czujnika lub odbiornik – wulkanizacja z testerem TPMS albo serwis."
+   },
+   "en": {
+    "title": "TPMS – no signal from rear right wheel",
+    "what": "The receiver hears nothing from the rear-right tyre sensor.",
+    "check": "Check that tyre's pressure and that the wheel has a sensor. Typically a weak sensor battery or the receiver – tyre shop with a TPMS tool or workshop."
+   },
+   "sources": [
+    "https://static.nhtsa.gov/odi/tsbs/2015/MC-10147243-9999.pdf"
+   ],
+   "confidence": "high"
+  },
+  {
+   "address": "29",
+   "code": "480713",
+   "unit": "DSC brakes",
+   "engines": [],
+   "severity": "workshop",
+   "pl": {
+    "title": "Czujnik prędkości koła PP – kierunek obrotu",
+    "what": "Sygnał czujnika prędkości przedniego prawego koła jest niewiarygodny. Może wyłączyć ABS/DSC.",
+    "check": "Hamulce bez ABS wymagają ostrożności – jedź spokojnie do serwisu. Sprawdzić czujnik i wiązkę; na X3 F25 znana jest wiązka zalana płynem spryskiwaczy przy przegrodzie."
+   },
+   "en": {
+    "title": "Wheel speed sensor FR – rotation direction",
+    "what": "The front-right wheel speed signal is implausible. ABS/DSC may be disabled.",
+    "check": "Brakes without ABS need care – drive gently to a workshop. Check sensor and wiring; on X3 F25 a harness soaked by washer fluid at the bulkhead is a known cause."
+   },
+   "sources": [
+    "https://static.nhtsa.gov/odi/tsbs/2020/MC-10174024-9999.pdf"
+   ],
+   "confidence": "medium"
+  },
+  {
+   "address": "29",
+   "code": "480715",
+   "unit": "DSC brakes",
+   "engines": [],
+   "severity": "workshop",
+   "pl": {
+    "title": "Czujnik prędkości koła PP – zwarcie zasilania",
+    "what": "Zasilanie czujnika prędkości przedniego prawego koła ma zwarcie. ABS/DSC może być wyłączony.",
+    "check": "Jedź ostrożnie do serwisu, nie kasuj błędu bez naprawy. Sprawdzić czujnik, wtyczkę i wiązkę (na X3 F25 – wiązka pod obudową filtra kabinowego)."
+   },
+   "en": {
+    "title": "Wheel speed sensor FR – supply short circuit",
+    "what": "The front-right wheel speed sensor supply is shorted. ABS/DSC may be off.",
+    "check": "Drive carefully to a workshop; don't clear it without a repair. Check sensor, plug and harness (on X3 F25 – harness under the cabin filter housing)."
+   },
+   "sources": [
+    "https://static.nhtsa.gov/odi/tsbs/2020/MC-10174024-9999.pdf"
+   ],
+   "confidence": "medium"
+  },
+  {
+   "address": "29",
+   "code": "48078B",
+   "unit": "DSC brakes",
+   "engines": [],
+   "severity": "workshop",
+   "pl": {
+    "title": "DSC – wymagana inicjalizacja EPS",
+    "what": "Moduł DSC zgłasza, że układ kierowniczy EPS wymaga ustawienia (inicjalizacji). Świeci kontrolka DSC.",
+    "check": "Wymaga serwisu: procedura uruchomienia/inicjalizacji EPS i kąta skrętu testerem. Nie ignoruj kontrolki DSC."
+   },
+   "en": {
+    "title": "DSC – EPS initialisation required",
+    "what": "The DSC module reports the EPS steering needs to be set up (initialised). DSC light is on.",
+    "check": "Needs a workshop: EPS start-up / steering angle initialisation with a tester. Don't ignore the DSC light."
+   },
+   "sources": [
+    "https://static.nhtsa.gov/odi/tsbs/2017/MC-10146635-9999.pdf"
+   ],
+   "confidence": "medium"
+  },
+  {
+   "address": "30",
+   "code": "4823E1",
+   "unit": "EPS steering",
+   "engines": [],
+   "severity": "workshop",
+   "pl": {
+    "title": "EPS – chwilowy zanik wspomagania przy rozruchu",
+    "what": "Wspomaganie kierownicy na moment zanika przy uruchamianiu silnika. Znane na wczesnych F30 i F22.",
+    "check": "Sprawdź akumulator (niskie napięcie przy rozruchu pogarsza objaw). Serwis: aktualizacja oprogramowania EPS wg biuletynu; nie wymieniać przekładni bez diagnozy."
+   },
+   "en": {
+    "title": "EPS – brief assist loss at engine start",
+    "what": "Power steering briefly drops out when starting the engine. Known on early F30 and F22.",
+    "check": "Check the battery (low cranking voltage worsens it). Workshop: EPS software update per BMW bulletin; don't replace the rack without diagnosis."
+   },
+   "sources": [
+    "https://static.nhtsa.gov/odi/tsbs/2013/SB-10052320-6697.pdf",
+    "https://static.nhtsa.gov/odi/tsbs/2015/MC-10147197-9999.pdf"
+   ],
+   "confidence": "high"
+  },
+  {
+   "address": "30",
+   "code": "482394",
+   "unit": "EPS steering",
+   "engines": [],
+   "severity": "workshop",
+   "pl": {
+    "title": "EPS – utracona wartość kąta skrętu (multi-turn)",
+    "what": "Moduł EPS stracił informację o liczbie obrotów kierownicy. Często razem z 48078B w DSC.",
+    "check": "Wymaga serwisu: inicjalizacja kąta skrętu i EPS testerem. Bywa po odłączeniu akumulatora lub trybie transportowym."
+   },
+   "en": {
+    "title": "EPS – steering angle multi-turn value lost",
+    "what": "The EPS module lost the steering wheel turn count. Often with 48078B in DSC.",
+    "check": "Needs a workshop: steering angle / EPS initialisation with a tester. Can follow battery disconnection or transport mode."
+   },
+   "sources": [
+    "https://static.nhtsa.gov/odi/tsbs/2017/MC-10146635-9999.pdf"
+   ],
+   "confidence": "medium"
+  },
+  {
+   "address": "30",
+   "code": "4822A6",
+   "unit": "EPS steering",
+   "engines": [],
+   "severity": "workshop",
+   "pl": {
+    "title": "EPS – zbyt niskie napięcie zasilania",
+    "what": "Moduł wspomagania zanotował zbyt niskie napięcie zasilania z instalacji.",
+    "check": "Sprawdź i naładuj akumulator, obejrzyj klemy. Jeśli to jedyny błąd i wraca, serwis może zaktualizować oprogramowanie EPS."
+   },
+   "en": {
+    "title": "EPS – supply undervoltage",
+    "what": "The power steering module logged too low supply voltage from the car.",
+    "check": "Check and charge the battery, inspect the terminals. If it's the only fault and returns, a workshop can update the EPS software."
+   },
+   "sources": [
+    "https://static.nhtsa.gov/odi/tsbs/2017/MC-10142931-9999.pdf"
+   ],
+   "confidence": "medium"
+  },
+  {
+   "address": "01",
+   "code": "930A1C",
+   "unit": "ACSM airbag",
+   "engines": [],
+   "severity": "workshop",
+   "pl": {
+    "title": "Czujnik zajętości fotela pasażera – wilgoć",
+    "what": "Mata wykrywania pasażera zgłasza błąd przez wilgoć. Może dawać fałszywe ostrzeżenie o niezapiętym pasie.",
+    "check": "Sprawdź, czy fotel pasażera nie jest mokry (rozlany napój, mokre ubranie), osusz. Poduszki powietrzne to układ bezpieczeństwa – jeśli kontrolka zostaje, serwis; nie kasuj na ślepo."
+   },
+   "en": {
+    "title": "Passenger seat occupancy sensor – moisture",
+    "what": "The occupant detection mat reports a fault due to moisture. May cause false seat-belt warnings.",
+    "check": "Check whether the passenger seat is wet (spill, damp clothes) and dry it. This is an airbag system – if the light stays, see a workshop; don't just clear it."
+   },
+   "sources": [
+    "https://static.nhtsa.gov/odi/tsbs/2019/MC-10153777-9999.pdf",
+    "https://static.nhtsa.gov/odi/tsbs/2025/MC-11018553-0001.pdf"
+   ],
+   "confidence": "high"
+  },
+  {
+   "address": "01",
+   "code": "930A1B",
+   "unit": "ACSM airbag",
+   "engines": [],
+   "severity": "workshop",
+   "pl": {
+    "title": "Mata zajętości fotela pasażera – przerwa czujnika",
+    "what": "Czujnik w macie fotela pasażera zgłasza przerwę. Świeci kontrolka poduszki powietrznej.",
+    "check": "Układ bezpieczeństwa: nie kasuj bez sprawdzenia. Serwis powinien zdiagnozować matę i wtyczki pod fotelem; czasem pomaga aktualizacja oprogramowania."
+   },
+   "en": {
+    "title": "Passenger occupancy mat – sensor interruption",
+    "what": "The passenger seat mat sensor reports an interruption. Airbag light is on.",
+    "check": "Safety system: don't clear it without a check. A workshop should diagnose the mat and under-seat connectors; sometimes a software update fixes it."
+   },
+   "sources": [
+    "https://static.nhtsa.gov/odi/tsbs/2019/MC-10154861-9999.pdf"
+   ],
+   "confidence": "high"
+  },
+  {
+   "address": "01",
+   "code": "930A16",
+   "unit": "ACSM airbag",
+   "engines": [],
+   "severity": "workshop",
+   "pl": {
+    "title": "Mata zajętości – część zamienna niezakodowana",
+    "what": "Po wymianie maty zajętości fotela pasażera sterownik airbag wymaga jej zakodowania. Kontrolka airbag świeci.",
+    "check": "Typowe po naprawie fotela. Wymaga serwisu z testerem BMW (kodowanie/oprogramowanie). Nie kasuj błędów airbag bez sprawdzenia."
+   },
+   "en": {
+    "title": "Occupancy mat – replacement part not coded",
+    "what": "After replacing the passenger occupancy mat, the airbag module needs it coded. Airbag light on.",
+    "check": "Typical after seat repairs. Needs a workshop with a BMW tester (coding/software). Never clear airbag faults without a check."
+   },
+   "sources": [
+    "https://static.nhtsa.gov/odi/tsbs/2019/MC-10153774-9999.pdf"
+   ],
+   "confidence": "medium"
+  },
+  {
+   "address": "40",
+   "code": "80402F",
+   "unit": "BDC body",
+   "engines": [],
+   "severity": "workshop",
+   "pl": {
+    "title": "Akumulator całkowicie rozładowany",
+    "what": "Zarządzanie energią zapisało całkowite rozładowanie akumulatora. Głęboko rozładowany akumulator często traci pojemność.",
+    "check": "Naładuj i przetestuj akumulator. Szukaj przyczyny: krótkie trasy, pozostawione odbiorniki, auto nie zasypia. Jeśli się powtarza – diagnoza energetyczna w serwisie; bywa też poprawka oprogramowania."
+   },
+   "en": {
+    "title": "Battery totally discharged",
+    "what": "Power management recorded a full battery discharge. A deeply discharged battery often loses capacity.",
+    "check": "Charge and test the battery. Look for the cause: short trips, loads left on, car not sleeping. If it repeats, get an energy diagnosis; BMW has software fixes for some cases."
+   },
+   "sources": [
+    "https://static.nhtsa.gov/odi/tsbs/2022/MC-10225118-9999.pdf",
+    "https://static.nhtsa.gov/odi/tsbs/2020/MC-10177628-9999.pdf",
+    "https://static.nhtsa.gov/odi/tsbs/2023/MC-10235191-9999.pdf"
+   ],
+   "confidence": "high"
+  },
+  {
+   "address": "5D",
+   "code": "800ABF",
+   "unit": "KAFAS camera",
+   "engines": [],
+   "severity": "info",
+   "pl": {
+    "title": "Kamera KAFAS – chwilowo zasłonięte pole widzenia",
+    "what": "Kamera asystentów za lusterkiem chwilowo nic nie widziała (deszcz, śnieg, brud, oślepienie). Zwykle normalne ograniczenie systemu.",
+    "check": "Umyj przednią szybę przed kamerą i sprawdź wycieraczki. Sam w sobie to nie usterka. Jeśli asystenci często się wyłączają przy dobrej pogodzie – serwis."
+   },
+   "en": {
+    "title": "KAFAS camera – view briefly obstructed",
+    "what": "The driver-assist camera behind the mirror briefly couldn't see (rain, snow, dirt, glare). Usually a normal system limit.",
+    "check": "Clean the windscreen in front of the camera and check the wipers. Not a fault on its own. If assistants often drop out in good weather, see a workshop."
+   },
+   "sources": [
+    "https://static.nhtsa.gov/odi/tsbs/2020/MC-10175290-9999.pdf",
+    "https://static.nhtsa.gov/odi/tsbs/2023/MC-10236236-9999.pdf"
+   ],
+   "confidence": "high"
+  },
+  {
+   "address": "5D",
+   "code": "800ABE",
+   "unit": "KAFAS camera",
+   "engines": [],
+   "severity": "workshop",
+   "pl": {
+    "title": "Kamera KAFAS – pole widzenia trwale zakłócone",
+    "what": "Kamera trwale nie widzi prawidłowo. Asystenci jazdy mogą być niedostępni.",
+    "check": "Wyczyść szybę i obszar przed kamerą, sprawdź, czy nic nie zasłania (naklejki, pęknięcie szyby). Jeśli zostaje – serwis (osłona kamery, kalibracja)."
+   },
+   "en": {
+    "title": "KAFAS camera – view permanently impaired",
+    "what": "The camera permanently cannot see properly. Driver assistance may be unavailable.",
+    "check": "Clean the glass in front of the camera and check nothing blocks it (stickers, windscreen crack). If it stays, see a workshop (camera hood, calibration)."
+   },
+   "sources": [
+    "https://static.nhtsa.gov/odi/tsbs/2026/MC-11026969-0001.pdf"
+   ],
+   "confidence": "medium"
+  },
+  {
+   "address": "5D",
+   "code": "800AC0",
+   "unit": "KAFAS camera",
+   "engines": [],
+   "severity": "watch",
+   "pl": {
+    "title": "Kamera KAFAS – wyłączona z powodu temperatury",
+    "what": "Kamera wyłączyła się, bo była za gorąca (np. auto na słońcu). Wraca po ostygnięciu.",
+    "check": "Jeśli występuje tylko w upały i ustępuje – to ochrona kamery. Jeśli częste przy umiarkowanych temperaturach, serwis (część kamer z 2015 r. miała wadę czujnika)."
+   },
+   "en": {
+    "title": "KAFAS camera – shut off for overtemperature",
+    "what": "The camera shut down because it got too hot (e.g. parked in sun). It returns once cool.",
+    "check": "If only in hot weather and it recovers, it's self-protection. If frequent in mild weather, see a workshop (some 2015 cameras had a faulty sensor)."
+   },
+   "sources": [
+    "https://static.nhtsa.gov/odi/tsbs/2015/MC-10147269-9999.pdf",
+    "https://static.nhtsa.gov/odi/tsbs/2016/MC-10147038-9999.pdf"
+   ],
+   "confidence": "high"
+  },
+  {
+   "address": "5D",
+   "code": "800AC4",
+   "unit": "KAFAS camera",
+   "engines": [],
+   "severity": "watch",
+   "pl": {
+    "title": "Kamera KAFAS – kalibracja nieudana",
+    "what": "Kamera nie dokończyła samokalibracji. Typowe po wymianie szyby lub kamery.",
+    "check": "Jedź dłużej po drogach z wyraźnymi pasami – kamera kalibruje się sama. Jeśli błąd zostaje, serwis: sprawdzenie osadzenia kamery w uchwycie i kalibracja."
+   },
+   "en": {
+    "title": "KAFAS camera – calibration failed",
+    "what": "The camera did not finish self-calibration. Typical after a windscreen or camera replacement.",
+    "check": "Drive longer on roads with clear lane markings – it calibrates itself. If it stays, workshop: check camera seating in its bracket and calibrate."
+   },
+   "sources": [
+    "https://static.nhtsa.gov/odi/tsbs/2016/MC-10146906-9999.pdf",
+    "https://static.nhtsa.gov/odi/tsbs/2016/MC-10151333-9999.pdf"
+   ],
+   "confidence": "high"
+  },
+  {
+   "address": "5D",
+   "code": "800AC8",
+   "unit": "KAFAS camera",
+   "engines": [],
+   "severity": "workshop",
+   "pl": {
+    "title": "Kamera KAFAS – trwały błąd kalibracji",
+    "what": "Kamera nie może się skalibrować. Asystenci (pas ruchu, znaki, hamowanie) mogą działać ograniczenie.",
+    "check": "Najpierw dłuższa jazda po dobrze oznakowanych drogach. Jeśli zostaje – serwis: osadzenie kamery, szyba, osłona kamery, kalibracja testerem."
+   },
+   "en": {
+    "title": "KAFAS camera – permanent calibration error",
+    "what": "The camera cannot calibrate. Assistants (lane, signs, braking) may be limited.",
+    "check": "First try a longer drive on well-marked roads. If it stays, workshop: camera seating, windscreen, camera hood, tester calibration."
+   },
+   "sources": [
+    "https://static.nhtsa.gov/odi/tsbs/2020/MC-10175290-9999.pdf",
+    "https://static.nhtsa.gov/odi/tsbs/2026/MC-11026969-0001.pdf"
+   ],
+   "confidence": "high"
+  },
+  {
+   "address": "5D",
+   "code": "800A24",
+   "unit": "KAFAS camera",
+   "engines": [],
+   "severity": "watch",
+   "pl": {
+    "title": "Kamera KAFAS – chwilowy błąd oprogramowania",
+    "what": "Kamera zgłosiła przejściowy błąd oprogramowania. Asystenci mogą chwilowo nie działać.",
+    "check": "Skasuj i obserwuj. Jeśli wraca, serwis może zaktualizować oprogramowanie kamery."
+   },
+   "en": {
+    "title": "KAFAS camera – temporary software fault",
+    "what": "The camera reported a transient software fault. Assistants may be briefly unavailable.",
+    "check": "Clear and watch. If it returns, a workshop can update the camera software."
+   },
+   "sources": [
+    "https://static.nhtsa.gov/odi/tsbs/2019/MC-10159146-9999.pdf",
+    "https://static.nhtsa.gov/odi/tsbs/2026/MC-11026969-0001.pdf"
+   ],
+   "confidence": "medium"
+  },
+  {
+   "address": "60",
+   "code": "B7F689",
+   "unit": "KOMBI cluster",
+   "engines": [],
+   "severity": "watch",
+   "pl": {
+    "title": "Zegary – wyłączone podświetlenie/grafika",
+    "what": "Wyświetlacz zegarów chwilowo zgasł (wyłączona płytka grafiki i podświetlenia). Znane na F-seriach.",
+    "check": "Przyczyną było oprogramowanie zegarów – nie wymieniaj części. Skasuj i obserwuj; jeśli wraca, serwis zaktualizuje oprogramowanie."
+   },
+   "en": {
+    "title": "Cluster – backlight/graphics board off",
+    "what": "The cluster display briefly went dark (graphics and backlight board switched off). Known on F-series.",
+    "check": "Cause was cluster software – don't replace parts. Clear and watch; if it returns, a workshop can update the software."
+   },
+   "sources": [
+    "https://static.nhtsa.gov/odi/tsbs/2015/MC-10147831-9999.pdf"
+   ],
+   "confidence": "high"
+  },
+  {
+   "address": "60",
+   "code": "B7F67E",
+   "unit": "KOMBI cluster",
+   "engines": [],
+   "severity": "watch",
+   "pl": {
+    "title": "Zegary – restart płyty głównej (watchdog)",
+    "what": "Zegary same się zrestartowały. Często zapisuje się po serwisie lub programowaniu.",
+    "check": "Jeśli zegary działają normalnie, to zwykle nic groźnego – skasuj i obserwuj. Przy częstych restartach serwis może zaktualizować oprogramowanie."
+   },
+   "en": {
+    "title": "Cluster – main board restart (watchdog)",
+    "what": "The instrument cluster restarted itself. Often stored after service or programming.",
+    "check": "If the cluster works normally it's usually harmless – clear and watch. If it restarts often, a workshop can update the software."
+   },
+   "sources": [
+    "https://static.nhtsa.gov/odi/tsbs/2018/MC-10153708-9999.pdf"
+   ],
+   "confidence": "medium"
+  },
+  {
+   "address": "60",
+   "code": "B7F655",
+   "unit": "KOMBI cluster",
+   "engines": [],
+   "severity": "watch",
+   "pl": {
+    "title": "Czujnik temperatury zewnętrznej – zwarcie (zegary)",
+    "what": "Zegary widzą zwarcie w obwodzie czujnika temperatury zewnętrznej.",
+    "check": "Sprawdź czujnik i wtyczkę w zderzaku. Jeśli pojawia się wiele różnych kodów naraz (PDC, DSC, spryskiwacze), sprawdź wiązkę przy przegrodzie – znany problem X3 F25."
+   },
+   "en": {
+    "title": "Outside temp sensor – short circuit (cluster)",
+    "what": "The cluster sees a short in the outside temperature sensor circuit.",
+    "check": "Check the sensor and its plug in the bumper. If many unrelated codes appear together (PDC, DSC, washers), check the harness at the bulkhead – known X3 F25 issue."
+   },
+   "sources": [
+    "https://static.nhtsa.gov/odi/tsbs/2020/MC-10174024-9999.pdf"
+   ],
+   "confidence": "medium"
+  },
+  {
+   "address": "63",
+   "code": "B7F856",
+   "unit": "Head unit",
+   "engines": [],
+   "severity": "watch",
+   "pl": {
+    "title": "Head unit – usterka napędu DVD",
+    "what": "Radio/nawigacja zgłasza błąd napędu DVD. Na części aut wiązało się to z rozładowaniem akumulatora.",
+    "check": "Jeśli auto nie ma problemu z akumulatorem, skasuj i obserwuj. Gdy towarzyszy mu rozładowanie (80402F), serwis powinien zaktualizować oprogramowanie head unitu."
+   },
+   "en": {
+    "title": "Head unit – DVD drive hardware fault",
+    "what": "The head unit reports a DVD drive fault. On some cars it went along with a drained battery.",
+    "check": "If there's no battery problem, clear and watch. If it comes with battery discharge (80402F), have a workshop update the head unit software."
+   },
+   "sources": [
+    "https://static.nhtsa.gov/odi/tsbs/2020/MC-10177628-9999.pdf"
+   ],
+   "confidence": "medium"
+  },
+  {
+   "address": "61",
+   "code": "B7F341",
+   "unit": "Telematics",
+   "engines": [],
+   "severity": "workshop",
+   "pl": {
+    "title": "Telematyka – bateria awaryjna uszkodzona",
+    "what": "Bateria zapasowa modułu połączeń alarmowych (eCall) jest zużyta lub uszkodzona. Komunikat o błędzie połączenia alarmowego.",
+    "check": "Wymaga wymiany baterii awaryjnej modułu TCB w serwisie. Sprawdź, czy auto nie jest objęte przedłużoną gwarancją na tę baterię."
+   },
+   "en": {
+    "title": "Telematics – emergency battery faulty",
+    "what": "The backup battery of the emergency call (eCall) module is worn or faulty. Emergency call error message.",
+    "check": "Needs the TCB backup battery replaced at a workshop. Check whether an extended warranty for this battery applies."
+   },
+   "sources": [
+    "https://static.nhtsa.gov/odi/tsbs/2024/MC-11009005-0001.pdf"
+   ],
+   "confidence": "high"
+  },
+  {
+   "address": "61",
+   "code": "B7F33F",
+   "unit": "Telematics",
+   "engines": [],
+   "severity": "workshop",
+   "pl": {
+    "title": "Telematyka – połączenie alarmowe niedostępne",
+    "what": "Błąd aplikacji modułu TCB – przycisk SOS nie zestawia połączenia.",
+    "check": "Połączenie alarmowe to funkcja bezpieczeństwa – zgłoś się do serwisu. Według BMW wystarcza zwykle test i procedura w testerze, bez wymiany części."
+   },
+   "en": {
+    "title": "Telematics – emergency call unavailable",
+    "what": "TCB application error – the SOS button does not place a call.",
+    "check": "Emergency call is a safety feature – visit a workshop. Per BMW it is usually fixed by running the tester procedure, without replacing parts."
+   },
+   "sources": [
+    "https://static.nhtsa.gov/odi/tsbs/2013/MC-10150135-9999.pdf"
+   ],
+   "confidence": "medium"
+  },
+  {
+   "address": "78",
+   "code": "E71442",
+   "unit": "IHKA climate",
+   "engines": [],
+   "severity": "watch",
+   "pl": {
+    "title": "Klimatyzacja – nieprawidłowy sygnał przebiegu",
+    "what": "Moduł klimatyzacji dostał nieprawidłowy sygnał przebytej drogi z zegarów. Zwykle skutek innego problemu.",
+    "check": "Najpierw obsłuż inne błędy w aucie. Jeśli wiele modułów zgłasza błędy naraz, podejrzewaj zasilanie lub wiązkę (na X3 F25 – wiązka zalana płynem spryskiwaczy)."
+   },
+   "en": {
+    "title": "Climate – distance signal invalid",
+    "what": "The climate module received an invalid distance signal from the cluster. Usually a side effect.",
+    "check": "Deal with other faults first. If many modules log faults at once, suspect power supply or wiring (on X3 F25 – harness soaked by washer fluid)."
+   },
+   "sources": [
+    "https://static.nhtsa.gov/odi/tsbs/2020/MC-10174024-9999.pdf"
+   ],
+   "confidence": "low"
+  },
+  {
+   "address": "2C",
+   "code": "D42DA1",
+   "unit": "USS park sensors",
+   "engines": [],
+   "severity": "workshop",
+   "pl": {
+    "title": "Czujniki parkowania – nieprawidłowy sygnał odometrii",
+    "what": "Moduł czujników parkowania dostaje nieprawidłowy sygnał ruchu auta z DSC. Asystent parkowania może się przerywać.",
+    "check": "Na G20 przyczyną było niedokładne ustawienie kąta skrętu z fabryki. Serwis: kalibracja kąta skrętu/geometria i diagnoza wg biuletynu BMW."
+   },
+   "en": {
+    "title": "Park sensors – odometry signal invalid",
+    "what": "The park sensor module gets an invalid vehicle-movement signal from DSC. Park Assist may abort.",
+    "check": "On G20 the cause was steering angle set imprecisely at the factory. Workshop: steering angle calibration/alignment and diagnosis per BMW's bulletin."
+   },
+   "sources": [
+    "https://static.nhtsa.gov/odi/tsbs/2020/MC-10184593-9999.pdf"
+   ],
+   "confidence": "medium"
+  }
+ ]
+}
