@@ -681,8 +681,8 @@ struct EnginePage: View {
         let rpm = last["rpm"] ?? 0, coolant = last["coolant"], speed = last["speed"] ?? 0
         Card {
             Text(t("Przygotuj auto", "Get the car ready")).font(.title.weight(.semibold))
-            Text(t("Kontrola trwa kilka minut: najpierw silnik pracuje na wolnych obrotach, potem przez minutę–dwie trzymasz 2500 obr/min. Aplikacja tylko czyta dane – niczego w aucie nie zmienia.",
-                   "The check takes a few minutes: first the engine idles, then you hold 2500 rpm for a minute or two. The app only reads data – it changes nothing in the car."))
+            Text(t("Kontrola trwa około 4 minut: najpierw silnik pracuje na wolnych obrotach, potem przez około minutę trzymasz 2500 obr/min. Aplikacja tylko czyta dane – niczego w aucie nie zmienia.",
+                   "The check takes about 4 minutes: first the engine idles, then you hold 2500 rpm for about a minute. The app only reads data – it changes nothing in the car."))
                 .foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
             VStack(alignment: .leading, spacing: 14) {
                 check(t("Połączenie z autem", "Connection to the car"), m.connected,
@@ -779,15 +779,15 @@ struct EnginePage: View {
 
     var idle: some View {
         recordingCard(title: t("Wolne obroty", "Idle"),
-                      text: t("Nie dotykaj gazu. Zostaw silnik na wolnych obrotach, aż pasek dojdzie do końca (kilka minut).",
-                              "Don't touch the pedal. Let the engine idle until the bar fills (a few minutes)."),
+                      text: t("Nie dotykaj gazu. Zostaw silnik na wolnych obrotach, aż pasek dojdzie do końca (2–3 minuty).",
+                              "Don't touch the pedal. Let the engine idle until the bar fills (2–3 minutes)."),
                       want: "idle", good: t("Nagrywam – tak trzymaj", "Recording – keep it like this"), count: m.idleCount, of: Model.idleNeeded) { EmptyView() }
     }
 
     var mid: some View {
         recordingCard(title: t("Trzymaj 2500 obr/min", "Hold 2500 rpm"),
-                      text: t("Auto stoi (P lub luz, hamulec postojowy). Wciśnij lekko gaz i trzymaj obroty w zielonym polu, aż pasek dojdzie do końca (minuta–dwie).",
-                              "The car is parked (P or neutral, parking brake). Press the pedal lightly and keep the revs in the green zone until the bar fills (a minute or two)."),
+                      text: t("Auto stoi (P lub luz, hamulec postojowy). Wciśnij lekko gaz i trzymaj obroty w zielonym polu, aż pasek dojdzie do końca (około minuty).",
+                              "The car is parked (P or neutral, parking brake). Press the pedal lightly and keep the revs in the green zone until the bar fills (about a minute)."),
                       want: "mid", good: t("Dobrze – trzymaj", "Good – hold it"), count: m.midCount, of: Model.midNeeded) {
             HStack(alignment: .center, spacing: 20) {
                 Text("\(Int(last["rpm"] ?? 0))").font(.system(size: 64, weight: .semibold, design: .rounded)).monospacedDigit()

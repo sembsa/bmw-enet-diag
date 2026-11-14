@@ -60,7 +60,7 @@ enum Section: String, CaseIterable, Identifiable {
 
     // engine check: get ready -> idle -> 2500 rpm -> result
     enum CheckStep: Int { case prepare, idle, mid, result }
-    static let idleNeeded = 120, midNeeded = 50
+    static let idleNeeded = 60, midNeeded = 30      // ~2.3 s per sample on a real F40: ~2.5 min idle, ~1 min at 2500
     @Published private(set) var idleCount = 0                      // samples the analysis will use, per step
     @Published private(set) var midCount = 0
     @Published var newCheck = false                                // the owner asked for a new check while a result exists
