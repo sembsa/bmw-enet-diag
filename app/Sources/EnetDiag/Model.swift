@@ -197,7 +197,7 @@ enum Section: String, CaseIterable, Identifiable {
     func faultsText() -> String {
         var s = t("Błędy z mojego BMW (adres sterownika, kod, status):\n", "Faults from my BMW (unit address, code, status):\n")
         for f in faults {
-            s += "\(f.address) \(f.unit) \(f.code) \(f.active ? "ACTIVE" : f.pending ? "PENDING" : "STORED")"
+            s += "\(f.address) \(f.unit) \(f.code) \(f.active ? "active" : f.pending ? "pending" : "stored")"
             if let h = f.hint { s += " – \(h.title.text)" }
             s += "\n"
         }

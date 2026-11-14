@@ -19,7 +19,29 @@ struct Stripe: View {
 }
 
 extension Fault {
-    var statusText: String { active ? "ACTIVE" : pending ? "PENDING" : "STORED" }
+    var statusText: String { active ? t("Aktywny", "Active") : pending ? t("Oczekuje", "Pending") : t("Zapisany", "Stored") }
+    /// The control unit in the owner's language: "Silnik (DME)".
+    var unitText: String {
+        let pl: [String: String] = [
+            "12": "Silnik", "13": "Silnik 2", "18": "Skrzynia biegów", "29": "Hamulce / ESP", "30": "Wspomaganie kierownicy",
+            "01": "Poduszki powietrzne", "37": "Audio", "40": "Moduł nadwozia", "10": "Bramka (gateway)", "5D": "Kamera przednia",
+            "60": "Zegary", "61": "Telematyka", "63": "iDrive", "64": "Czujniki parkowania", "2C": "Czujniki parkowania",
+            "78": "Klimatyzacja", "1D": "Zbiornik paliwa", "21": "Radar przedni", "43": "Reflektor lewy", "44": "Reflektor prawy",
+            "6D": "Fotel", "56": "Dach", "38": "Napęd xDrive", "0D": "Klapa bagażnika", "67": "Kontroler iDrive",
+            "45": "Kamera kierowcy", "23": "Czujniki asystentów", "06": "Kamery", "76": "Amortyzatory", "39": "Wspomaganie hamulca",
+        ]
+        let en: [String: String] = [
+            "12": "Engine", "13": "Engine 2", "18": "Gearbox", "29": "Brakes / stability", "30": "Power steering",
+            "01": "Airbags", "37": "Audio", "40": "Body module", "10": "Gateway", "5D": "Front camera",
+            "60": "Instrument cluster", "61": "Telematics", "63": "iDrive", "64": "Parking sensors", "2C": "Parking sensors",
+            "78": "Climate", "1D": "Fuel tank", "21": "Front radar", "43": "Left headlight", "44": "Right headlight",
+            "6D": "Seat", "56": "Roof", "38": "xDrive", "0D": "Tailgate", "67": "iDrive controller",
+            "45": "Driver camera", "23": "Assist sensors", "06": "Cameras", "76": "Dampers", "39": "Brake booster",
+        ]
+        let short = unit.split(separator: " ").first.map(String.init) ?? unit      // DME, DSC, KAFAS …
+        guard let name = (Lang.current == .pl ? pl : en)[address] else { return unit }
+        return short.hasPrefix("ECU") ? name : "\(name) (\(short))"
+    }
     var statusColor: Color { active ? Theme.red : pending ? .orange : .secondary }
     var kindSymbol: String {
         switch kind {

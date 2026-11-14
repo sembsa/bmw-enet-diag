@@ -61,31 +61,31 @@ struct MainToolbar: ToolbarContent {
     var body: some ToolbarContent {
         if m.connected {
             ToolbarItem(placement: .primaryAction) {
-                Button { Task { await m.readFaults() } } label: { Label(t("Odczytaj błędy", "Read Faults"), systemImage: "arrow.clockwise") }
-                    .labelStyle(.titleAndIcon)
-                    .help(t("Odczytaj pamięć błędów wszystkich sterowników (⌘R)", "Read every control unit's fault memory (⌘R)"))
-                    .disabled(m.busy != nil)
-            }
-            ToolbarSpacer(.fixed, placement: .primaryAction)
-            ToolbarItemGroup(placement: .primaryAction) {
-                Button { Task { await m.runProbe() } } label: { Label(t("Pełny odczyt", "Full Read"), systemImage: "doc.text.magnifyingglass") }
-                    .help(t("Pełny odczyt silnika do pliku (⇧⌘P)", "Full engine read to a file (⇧⌘P)"))
-                    .disabled(m.busy != nil)
-                Button { Task { await m.disconnect() } } label: { Label(t("Rozłącz", "Disconnect"), systemImage: "eject") }
-                    .help(t("Rozłącz (⌘K)", "Disconnect (⌘K)"))
+                Menu {
+                    Button { Task { await m.readFaults() } } label: { Label(t("Odczytaj błędy ponownie", "Read Faults Again"), systemImage: "arrow.clockwise") }
+                    Button { Task { await m.runProbe() } } label: { Label(t("Pełny odczyt silnika", "Full Engine Read"), systemImage: "doc.text.magnifyingglass") }
+                        .keyboardShortcut("p", modifiers: [.command, .shift])
+                    Divider()
+                    Button { Task { await m.disconnect() } } label: { Label(t("Rozłącz", "Disconnect"), systemImage: "eject") }
+                } label: {
+                    Label(m.isDemo ? "Demo" : t("Połączono", "Connected"), systemImage: m.isDemo ? "play.rectangle.fill" : "cable.connector")
+                        .labelStyle(.titleAndIcon)
+                }
+                .help(t("Połączenie: odczytaj ponownie (⌘R), pełny odczyt (⇧⌘P), rozłącz (⌘K)",
+                        "Connection: read again (⌘R), full read (⇧⌘P), disconnect (⌘K)"))
+                .disabled(m.busy != nil)
             }
         } else {
             ToolbarItem(placement: .primaryAction) {
-                Button { Task { await m.connectDemo() } } label: { Label(t("Demo", "Demo"), systemImage: "play.rectangle") }
-                    .help(t("Wypróbuj na symulowanym aucie (⇧⌘D)", "Try it on a simulated car (⇧⌘D)"))
-            }
-            ToolbarSpacer(.fixed, placement: .primaryAction)
-            ToolbarItem(placement: .primaryAction) {
-                Button { Task { await m.connect() } } label: { Label(t("Połącz", "Connect"), systemImage: "cable.connector") }
-                    .labelStyle(.titleAndIcon)
-                    .buttonStyle(.glassProminent)
-                    .help(t("Kabel ENET w gnieździe OBD, zapłon włączony (⌘K)", "ENET cable in the OBD port, ignition on (⌘K)"))
-                    .disabled(m.busy != nil)
+                Menu {
+                    Button { Task { await m.connectDemo() } } label: { Label(t("Wypróbuj demo", "Try the Demo"), systemImage: "play.rectangle") }
+                } label: {
+                    Label(t("Połącz", "Connect"), systemImage: "cable.connector").labelStyle(.titleAndIcon)
+                } primaryAction: {
+                    Task { await m.connect() }
+                }
+                .help(t("Kabel ENET w gnieździe OBD, zapłon włączony (⌘K). Strzałka: demo.", "ENET cable in the OBD port, ignition on (⌘K). Arrow: demo."))
+                .disabled(m.busy != nil)
             }
         }
     }
@@ -242,18 +242,42 @@ struct Dashboard: View {
                 Button { m.section = .live; m.startLive() } label: { Label(t("Dane na żywo", "Live Data"), systemImage: "waveform.path.ecg") }
                 Button { m.section = .engine } label: { Label(t("Kontrola silnika", "Engine Check"), systemImage: "engine.combustion") }
             }
-            if let top = m.faults.first(where: { $0.active }) {
+            let top = Array(m.faults.sorted { ($0.active ? 0 : 1, $0.hint?.severity == .workshop ? 0 : 1) < ($1.active ? 0 : 1, $1.hint?.severity == .workshop ? 0 : 1) }.prefix(3))
+            HStack(alignment: .top, spacing: 12) {
                 GroupBox {
-                    HStack(alignment: .top, spacing: 12) {
-                        Pill(text: top.statusText, color: top.statusColor)
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("\(top.code) · \(top.unit)").font(.headline.monospaced())
-                            Text(top.hint?.title.text ?? t("Brak naszego opisu – zapytaj asystenta AI", "No note of ours – ask your AI assistant"))
-                            if let h = top.hint { Text(h.check.text).font(.callout).foregroundStyle(.secondary) }
+                    VStack(alignment: .leading, spacing: 12) {
+                        if top.isEmpty { Label(t("Brak błędów", "No faults"), systemImage: "checkmark.seal").foregroundStyle(.green) }
+                        ForEach(top) { f in
+                            HStack(alignment: .top, spacing: 10) {
+                                Image(systemName: f.hint?.severity.symbol ?? "questionmark.circle")
+                                    .foregroundStyle(f.hint?.severity.color ?? .secondary).frame(width: 18)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(f.hint?.title.text ?? t("Kod bez naszego opisu", "Code without a note of ours")).font(.headline)
+                                    Text("\(f.code) · \(f.unitText) · \(f.statusText)").font(.caption).foregroundStyle(.secondary)
+                                }
+                                Spacer(minLength: 0)
+                            }
+                            .contentShape(Rectangle())
+                            .onTapGesture { m.section = .faults }
                         }
-                        Spacer()
                     }
+                    .frame(maxWidth: .infinity, alignment: .leading).padding(4)
                 } label: { Label(t("Najważniejsze teraz", "Most Important Now"), systemImage: "flag.fill") }
+                GroupBox {
+                    VStack(alignment: .leading, spacing: 12) {
+                        if let r = m.report {
+                            ForEach(r.findings) { f in
+                                Label { Text(f.title.text) } icon: { Image(systemName: f.level.symbol).foregroundStyle(f.level.color) }
+                            }
+                        } else {
+                            Text(t("Nagraj log w Kontroli silnika, a tu pojawi się wynik.", "Record a log in Engine Check and the result shows here."))
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading).padding(4)
+                    .contentShape(Rectangle())
+                    .onTapGesture { m.section = .engine }
+                } label: { Label(t("Kontrola silnika", "Engine Check"), systemImage: "engine.combustion") }
             }
             if let p = m.probe {
                 GroupBox {
@@ -280,12 +304,12 @@ struct FaultsPage: View {
     @State var selection: Fault.ID?
     @State var search = ""
     @State var onlyActive = false
-    @State var inspector = true
+    @State var inspector = false
     @State var sort: [KeyPathComparator<Fault>] = []          // empty: the car's order (active first, engine first)
 
     var shown: [Fault] {
         m.faults.filter { (!onlyActive || $0.active) &&
-            (search.isEmpty || "\($0.code) \($0.unit) \($0.hint?.title.text ?? "")".localizedCaseInsensitiveContains(search)) }
+            (search.isEmpty || "\($0.code) \($0.unit) \($0.unitText) \($0.hint?.title.text ?? "")".localizedCaseInsensitiveContains(search)) }
             .sorted(using: sort.isEmpty ? [] : sort)
     }
 
@@ -297,10 +321,10 @@ struct FaultsPage: View {
                                            description: Text(t("Żaden sterownik nie zgłasza błędów.", "No control unit reports a fault.")))
                 } else {
                     Table(shown, selection: $selection, sortOrder: $sort) {
-                        TableColumn(t("Status", "Status"), value: \.statusText) { f in Pill(text: f.statusText, color: f.statusColor) }.width(78)
+                        TableColumn(t("Status", "Status"), value: \.statusText) { f in Pill(text: f.statusText, color: f.statusColor) }.width(96)
                         TableColumn(t("Kod", "Code"), value: \.code) { f in Text(f.code).font(.body.monospaced().weight(.semibold)) }.width(72)
-                        TableColumn(t("Sterownik", "Control Unit"), value: \.unit) { f in Label(f.unit, systemImage: f.kindSymbol).lineLimit(1) }
-                            .width(min: 110, ideal: 140, max: 180)
+                        TableColumn(t("Moduł", "Module"), value: \.unitText) { f in Label(f.unitText, systemImage: f.kindSymbol).lineLimit(1) }
+                            .width(min: 180, ideal: 230, max: 300)
                         TableColumn(t("Opis", "Description")) { f in
                             if let h = f.hint {
                                 Label { Text(h.title.text) } icon: { Image(systemName: h.severity.symbol).foregroundStyle(h.severity.color) }
@@ -309,13 +333,15 @@ struct FaultsPage: View {
                             }
                         }
                     }
+                    .alternatingRowBackgrounds(.disabled)
                     .contextMenu(forSelectionType: Fault.ID.self) { ids in
                         Button(t("Kopiuj kod", "Copy Code")) { copy(m.faults.filter { ids.contains($0.id) }.map(\.code).joined(separator: "\n")) }
                         Button(t("Kopiuj dla AI", "Copy for AI")) { copy(m.faultsText()) }
                     } primaryAction: { _ in inspector = true }
                 }
             }
-            .searchable(text: $search, prompt: t("Szukaj kodu lub sterownika", "Search code or unit"))
+            .onChange(of: selection) { _, id in if id != nil { inspector = true } }
+            .searchable(text: $search, prompt: t("Szukaj kodu lub modułu", "Search code or module"))
             .inspector(isPresented: $inspector) {
                 FaultInspector(fault: m.faults.first { $0.id == selection })
                     .inspectorColumnWidth(min: 240, ideal: 290, max: 360)
@@ -351,7 +377,7 @@ struct FaultInspector: View {
                 SwiftUI.Section {
                     LabeledContent(t("Kod", "Code")) { Text(f.code).font(.title2.monospaced().weight(.bold)).textSelection(.enabled) }
                     LabeledContent(t("Status", "Status")) { Pill(text: f.statusText, color: f.statusColor) }
-                    LabeledContent(t("Sterownik", "Control unit")) { Label(f.unit, systemImage: f.kindSymbol) }
+                    LabeledContent(t("Moduł", "Module")) { Label(f.unitText, systemImage: f.kindSymbol) }
                     LabeledContent(t("Adres", "Address")) { Text("0x" + f.address).monospaced() }
                 }
                 if let h = f.hint {
@@ -525,7 +551,7 @@ struct EnginePage: View {
                         GroupBox {
                             VStack(alignment: .leading, spacing: 6) {
                                 ForEach(related) { f in
-                                    HStack { Pill(text: f.statusText, color: f.statusColor); Text(f.code).monospaced(); Text(f.hint?.title.text ?? f.unit).foregroundStyle(.secondary) }
+                                    HStack { Pill(text: f.statusText, color: f.statusColor); Text(f.code).monospaced(); Text(f.hint?.title.text ?? f.unitText).foregroundStyle(.secondary) }
                                 }
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)
