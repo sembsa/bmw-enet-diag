@@ -50,5 +50,16 @@ public enum Hints {
         }, uniquingKeysWith: { a, _ in a })
     }()
 
-    public static func hint(address: UInt8, code: String) -> Hint? { notes[String(format: "%02X:", address) + code] }
+    public static func hint(address: UInt8, code: String) -> Hint? {
+        notes[String(format: "%02X:", address) + code] ?? (code.hasPrefix("CD") ? network : nil)
+    }
+
+    /// BMW's CDxxxx range: a unit missed or rejected a message from another unit on the car's network.
+    static let network = Hint(severity: .info,
+        title: L("Komunikacja w sieci auta", "Network communication"),
+        what: L("Sterownik nie dostał komunikatu od innego sterownika albo dostał niepoprawny. Zwykle skutek, nie przyczyna: rozładowany akumulator, uśpione moduły, praca przy aucie. Pojedyncze wpisy bez innych błędów nie są problemem.",
+                "The unit missed a message from another unit, or got an invalid one. Usually an effect, not a cause: a low battery, units asleep, work on the car. Lone entries without other faults are harmless."),
+        check: L("Napięcie akumulatora i czy wraca po skasowaniu. Jeśli wraca razem z błędami konkretnego modułu – zacznij od tego modułu.",
+                 "Battery voltage, and whether it returns after clearing. If it comes back with faults from one module, start with that module."),
+        sources: [], confidence: "low")
 }

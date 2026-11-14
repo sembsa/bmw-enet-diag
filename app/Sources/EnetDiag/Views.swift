@@ -207,7 +207,7 @@ struct Stat: View {
             VStack(alignment: .leading, spacing: 6) {
                 Text(value).font(.system(size: 38, weight: .semibold, design: .rounded)).foregroundStyle(color)
                     .lineLimit(1).minimumScaleFactor(0.6).contentTransition(.numericText())
-                Text(caption).font(.callout).foregroundStyle(.secondary).lineLimit(1)
+                Text(caption).font(.callout).foregroundStyle(.secondary).lineLimit(2).fixedSize(horizontal: false, vertical: true)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(12)
@@ -362,13 +362,13 @@ struct FaultsPage: View {
                     Table(shown, selection: $selection, sortOrder: $sort) {
                         TableColumn(t("Status", "Status"), value: \.statusText) { f in Pill(text: f.statusText, color: f.statusColor) }.width(96)
                         TableColumn(t("Kod", "Code"), value: \.code) { f in Text(f.code).font(.body.monospaced().weight(.semibold)) }.width(72)
-                        TableColumn(t("Moduł", "Module"), value: \.unitText) { f in Label(f.unitText, systemImage: f.kindSymbol).lineLimit(1) }
+                        TableColumn(t("Moduł", "Module"), value: \.unitText) { f in Label(f.unitText, systemImage: f.kindSymbol).lineLimit(2) }
                             .width(min: 180, ideal: 230, max: 300)
                         TableColumn(t("Opis", "Description")) { f in
                             if let h = f.hint {
-                                Label { Text(h.title.text) } icon: { Image(systemName: h.severity.symbol).foregroundStyle(h.severity.color) }
+                                Label { Text(h.title.text).lineLimit(3) } icon: { Image(systemName: h.severity.symbol).foregroundStyle(h.severity.color) }
                             } else {
-                                Text(t("Brak opisu – zapytaj asystenta AI", "No note – ask your AI assistant")).foregroundStyle(.secondary)
+                                Text(t("Brak opisu – zapytaj asystenta AI", "No note – ask your AI assistant")).foregroundStyle(.secondary).lineLimit(2)
                             }
                         }
                     }
@@ -460,7 +460,7 @@ struct Tile: View {
     var norm: Norm? = nil
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(label).font(.callout).foregroundStyle(.secondary).lineLimit(1)
+            Text(label).font(.callout).foregroundStyle(.secondary).lineLimit(2).fixedSize(horizontal: false, vertical: true)
             HStack(alignment: .firstTextBaseline, spacing: 3) {
                 Text(value.map { String(format: "%.\(digits)f", $0) } ?? "–")
                     .font(.system(size: 28, weight: .semibold, design: .rounded)).monospacedDigit().contentTransition(.numericText())
@@ -475,7 +475,7 @@ struct Tile: View {
                     Image(systemName: norm.ok == true ? "checkmark.circle.fill" : norm.ok == false ? "exclamationmark.triangle.fill" : "clock")
                         .foregroundStyle(color)
                 }
-                .font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                 .help(norm.ok == false ? t("Poza typowym zakresem", "Outside the typical range") : t("Typowy zakres dla nowoczesnego silnika benzynowego", "Typical range for a modern petrol engine"))
             }
         }

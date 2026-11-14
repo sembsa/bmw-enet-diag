@@ -291,6 +291,11 @@ final class IdentityTests: XCTestCase {
         XCTAssertNil(Norms.check("rail", 350, in: warmIdle))                                            // engine-specific: no norm
     }
 
+    func testNetworkFamilyHint() {
+        XCTAssertEqual(Hints.hint(address: 0x10, code: "CD040A")?.confidence, "low")
+        XCTAssertNil(Hints.hint(address: 0x10, code: "801C76"))
+    }
+
     func testDemoIdentity() async throws {
         let id = try await Car.demo().identity()
         XCTAssertEqual(id.vin, "WBA7L1100N7123456")
