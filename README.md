@@ -1,67 +1,51 @@
-# bmw-enet-diag
+# BMW ENET Diag
 
-Read-only BMW diagnostics over an ENET cable: every control unit's fault memory with hints, live engine
-values (SAE J1979), and an analysis of fuel trims for fault **101F01** (air mass plausibility). A command
-line tool, an MCP server for your own AI client, and a small macOS app. Python 3 standard library only.
+A native macOS app (macOS 26+) for read-only BMW diagnostics over an ENET cable, for any F/G-series BMW:
+every control unit's faults with hints (Polish and English), live engine data from public OBD standards,
+misfire counters per cylinder, a guided engine check with its analysis, and an MCP server so your own
+Claude can explain any fault. A demo mode shows a simulated car.
 
 ## Read-only, by construction
 
-Every request to the car goes through one function, `link.check`, before a socket is touched:
+Every request to the car passes `Allowlist.check` in `Car` (the only public way to the car) and again at
+the socket:
 
 | Allowed | To |
 |---|---|
-| UDS `19 01/02/04/06` read fault memory, its snapshot and extended data | every control unit, or all at once (`0xDF`) |
-| UDS `22 F1xx` identification | every control unit |
-| OBD `01 02 03 07 09`, UDS `22` any identifier | the engine unit (`0x12`) only |
+| UDS `19 01/02/04/06` – read fault memory, its snapshot and extended data | every control unit, or all at once (`0xDF`) |
+| OBD `01 02 03 06 07 09 0A`, UDS `22` (read by identifier) | the engine unit (`0x12`) only |
 
-Everything else is refused (`NotAllowed`): clearing (`14`, OBD `04`), sessions (`10`), security access (`27`),
-writing and control (`2E`, `2F`, `31`), resets, downloads. The tools only name operations; none takes
-request bytes. Clearing faults is done in the MGU Store's **Fault Scanner** or at a workshop.
-Requests go one at a time, at least 40 ms apart. Captures hold the VIN and stay out of git (`captures/`).
+Everything else is refused before a byte goes out: clearing (`14`, OBD `04`), sessions (`10`), security access
+(`27`), writes, controls and routines (`2E 2F 31`), resets, downloads. Clearing faults is done in the MGU Store's
+**Fault Scanner** or at a workshop. The app connects only to local addresses (ENET link-local or private),
+sends one request at a time, survives a dropped connection, and never shows or sends the VIN to the AI
+(the MCP server redacts it). Captures hold the VIN and stay in `~/Library/Application Support/EnetDiag/captures`.
 
-## Use
-
-Plug the ENET cable into the OBD port and the Mac, ignition on (engine running for live values).
+## Build and run
 
 ```
-python3 -m enetdiag faults            # every unit's faults, with our hint where we have one
-python3 -m enetdiag probe             # engine: supported values, snapshot, faults, freeze frame -> captures/
-python3 -m enetdiag live              # engine values every second
-python3 -m enetdiag log --minutes 10  # -> captures/log-<time>.csv
-python3 -m enetdiag analyze captures/log-<time>.csv
+cd app
+./make-app.sh            # -> build/EnetDiag.app (icon, en/pl, ad-hoc signed)
+open build/EnetDiag.app  # Connect, or Try the Demo
+swift test               # allowlist, transport (fake gateway), decoding, analysis, demo, MCP, hardening
 ```
 
-No gateway found: pass `--host <ip>`, and on macOS allow the terminal (or the app) **Local Network** access
-in System Settings > Privacy & Security.
-
-For a 101F01 log: warm engine, 2-3 min at idle, then about 2500 rpm for a minute, at standstill. Don't
-operate the computer while driving.
+Plug the ENET cable into the OBD port and the Mac, ignition on (engine running for live data). If the gateway
+isn't found, set its IP in Settings and allow **Local Network** for the app.
 
 ## Your own AI (MCP)
 
-```
-claude mcp add bmw-enet -- python3 -m enetdiag.mcp      # from this folder
-```
-
-Tools: `read_faults`, `engine_snapshot`, `list_captures`, `read_capture`, `analyze_log`. Stdio only, no
-listener; the same allowlist applies. Ask it to explain the faults and what to check first.
-
-## App
+The app's AI page shows the command, e.g.
 
 ```
-cd app && swift run
+claude mcp add bmw-enet -- "/path/to/EnetDiag.app/Contents/MacOS/EnetDiag" --mcp
 ```
 
-Read faults (with hints), probe the engine, analyse a log. It runs the Python core, so the allowlist stays
-in one place.
+Tools: `read_faults`, `engine_snapshot`, `list_captures`, `read_capture`, `analyze_log`. Stdio only, no listener.
 
-## Tests
+## Fault notes
 
-```
-python3 -m unittest discover tests
-```
+`data/known_codes.json` (191 codes) – short notes in our own words, mostly from BMW service bulletins published
+by NHTSA, each with its sources and a confidence. Add one by pull request, then `tools/embed-codes.sh`.
 
-A fake HSFZ gateway and replayed answers: the allowlist, framing (acks, other units, response pending),
-the all-units scan, decoding, the analyzer's verdicts and the MCP server.
-
-Control unit names: from cauliflowermossgrape/idrive7-apps `kit/runtime/ecus.js` (MIT).
+Control unit names: from cauliflowermossgrape/idrive7-apps `kit/runtime/ecus.js` (MIT). Not affiliated with BMW AG.
