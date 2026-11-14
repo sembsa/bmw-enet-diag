@@ -106,7 +106,10 @@ public enum Analysis {
             f.append(finding("mixture", L("Mieszanka (korekty paliwa)", "Mixture (fuel trims)"), level, verdict, v))
         }
 
-        if hasMaf {
+        // Valvetronic engines (most BMW petrols) idle with the throttle open: manifold near baro, VE set by valve lift,
+        // so neither the vacuum check nor the speed-density model of the air mass meter applies.
+        let idleMap = mean(idle.map { $0["map"] }), throttled = (idleMap ?? 0) <= 75
+        if hasMaf && throttled {
             func ratio(_ rs: [Sample]) -> Double? { mean(rs.map { s in s["maf"].flatMap { m in sdPerLitre(s).map { m / $0 } } }) }
             if let ri = ratio(idle), let rm = ratio(mid), ri > 0 {
                 let drift = (rm / ri * 100).rounded() / 100, off = abs(drift - 1) > 0.2
@@ -125,7 +128,12 @@ public enum Analysis {
             f.append(finding("charging", L("Ładowanie", "Charging"), (13.2...15.0).contains(v) ? .ok : .watch, verdict, ["voltage": v], ["body", "engine"]))
         }
 
-        if let m = mean(idle.map { $0["map"] }) {
+        if let m = idleMap, !throttled {
+            f.append(finding("idleVacuum", L("Podciśnienie na wolnych", "Idle vacuum"), .unknown,
+                             L("Kolektor blisko ciśnienia atmosferycznego – silnik z Valvetronic, ten test go nie dotyczy (nie sprawdzano też przepływomierza modelem).",
+                               "Manifold near atmospheric – a Valvetronic engine, this check doesn't apply (the air mass meter model check is skipped too)."),
+                             ["map_idle": m]))
+        } else if let m = idleMap {
             f.append(finding("idleVacuum", L("Podciśnienie na wolnych", "Idle vacuum"), m <= 45 ? .ok : .watch,
                              m <= 45 ? L("Ciśnienie w kolektorze na wolnych typowe.", "Manifold pressure at idle is typical.")
                                      : L("Wysokie ciśnienie w kolektorze na wolnych – możliwa nieszczelność lub dławienie.", "High manifold pressure at idle – a leak or a restriction is possible."),
