@@ -108,7 +108,7 @@ public actor Car {
     public func faults() async throws -> [Fault] {
         var out: [Fault] = []
         for (addr, resp) in try await askAll([0x19, 0x02, 0xFF]) {
-            for (code, st) in parseDtcs(resp) where st & 0x0D != 0 {   // failed now, pending or confirmed
+            for (code, st) in parseDtcs(resp) where st & 0x0C != 0 {   // pending or confirmed; "failed this instant" alone (BDC 0x43) is not a stored fault
                 out.append(Fault(unit: Hints.unitName(addr), address: String(format: "%02X", addr), code: code, status: st,
                                  active: st & 0x01 != 0, pending: st & 0x04 != 0, confirmed: st & 0x08 != 0))
             }
