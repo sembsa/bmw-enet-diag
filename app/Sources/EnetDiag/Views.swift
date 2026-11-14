@@ -59,27 +59,33 @@ struct SidebarFooter: View {
 struct MainToolbar: ToolbarContent {
     @EnvironmentObject var m: Model
     var body: some ToolbarContent {
-        ToolbarItemGroup(placement: .primaryAction) {
-            if m.connected {
-                Button { Task { await m.readFaults() } } label: { Label(t("Odczytaj błędy", "Read Faults"), systemImage: "arrow.clockwise") }.labelStyle(.titleAndIcon)
+        if m.connected {
+            ToolbarItem(placement: .primaryAction) {
+                Button { Task { await m.readFaults() } } label: { Label(t("Odczytaj błędy", "Read Faults"), systemImage: "arrow.clockwise") }
+                    .labelStyle(.titleAndIcon)
                     .help(t("Odczytaj pamięć błędów wszystkich sterowników (⌘R)", "Read every control unit's fault memory (⌘R)"))
-                Button { Task { await m.runProbe() } } label: { Label(t("Pełny odczyt", "Full Read"), systemImage: "doc.text.magnifyingglass") }.labelStyle(.titleAndIcon)
-                    .help(t("Wszystko z silnika do pliku", "Everything from the engine to a file"))
-            } else {
-                Button { Task { await m.connectDemo() } } label: { Label("Demo", systemImage: "play.rectangle") }.labelStyle(.titleAndIcon)
-                    .help(t("Symulowane auto", "A simulated car"))
+                    .disabled(m.busy != nil)
             }
-        }
-        ToolbarSpacer(.fixed, placement: .primaryAction)
-        ToolbarItem(placement: .primaryAction) {
-            if m.busy != nil {
-                ProgressView().controlSize(.small)
-            } else if m.connected {
-                Button { Task { await m.disconnect() } } label: { Label(t("Rozłącz", "Disconnect"), systemImage: "eject") }.labelStyle(.titleAndIcon)
-            } else {
-                Button { Task { await m.connect() } } label: { Label(t("Połącz", "Connect"), systemImage: "cable.connector") }.labelStyle(.titleAndIcon)
+            ToolbarSpacer(.fixed, placement: .primaryAction)
+            ToolbarItemGroup(placement: .primaryAction) {
+                Button { Task { await m.runProbe() } } label: { Label(t("Pełny odczyt", "Full Read"), systemImage: "doc.text.magnifyingglass") }
+                    .help(t("Pełny odczyt silnika do pliku (⇧⌘P)", "Full engine read to a file (⇧⌘P)"))
+                    .disabled(m.busy != nil)
+                Button { Task { await m.disconnect() } } label: { Label(t("Rozłącz", "Disconnect"), systemImage: "eject") }
+                    .help(t("Rozłącz (⌘K)", "Disconnect (⌘K)"))
+            }
+        } else {
+            ToolbarItem(placement: .primaryAction) {
+                Button { Task { await m.connectDemo() } } label: { Label(t("Demo", "Demo"), systemImage: "play.rectangle") }
+                    .help(t("Wypróbuj na symulowanym aucie (⇧⌘D)", "Try it on a simulated car (⇧⌘D)"))
+            }
+            ToolbarSpacer(.fixed, placement: .primaryAction)
+            ToolbarItem(placement: .primaryAction) {
+                Button { Task { await m.connect() } } label: { Label(t("Połącz", "Connect"), systemImage: "cable.connector") }
+                    .labelStyle(.titleAndIcon)
                     .buttonStyle(.glassProminent)
                     .help(t("Kabel ENET w gnieździe OBD, zapłon włączony (⌘K)", "ENET cable in the OBD port, ignition on (⌘K)"))
+                    .disabled(m.busy != nil)
             }
         }
     }
@@ -315,13 +321,20 @@ struct FaultsPage: View {
                     .inspectorColumnWidth(min: 240, ideal: 290, max: 360)
             }
             .toolbar {
+                ToolbarItem(placement: .principal) {
+                    Picker(t("Pokaż", "Show"), selection: $onlyActive) {
+                        Text(t("Wszystkie", "All")).tag(false)
+                        Text(t("Aktywne", "Active")).tag(true)
+                    }
+                    .pickerStyle(.segmented)
+                    .help(t("Wszystkie błędy albo tylko aktywne", "All faults, or active ones only"))
+                }
                 ToolbarItemGroup {
-                    Toggle(isOn: $onlyActive) { Label(t("Tylko aktywne", "Active Only"), systemImage: "line.3.horizontal.decrease") }.labelStyle(.titleAndIcon)
-                        .help(t("Pokaż tylko aktywne błędy", "Show active faults only"))
-                    Button { copy(m.faultsText()) } label: { Label(t("Kopiuj dla AI", "Copy for AI"), systemImage: "sparkles") }.labelStyle(.titleAndIcon)
+                    Button { copy(m.faultsText()) } label: { Label(t("Kopiuj dla AI", "Copy for AI"), systemImage: "sparkles") }
                         .disabled(m.faults.isEmpty)
-                        .help(t("Lista błędów do wklejenia asystentowi AI", "The fault list, to paste into your AI assistant"))
-                    Button { inspector.toggle() } label: { Label(t("Szczegóły", "Details"), systemImage: "sidebar.trailing") }.labelStyle(.titleAndIcon)
+                        .help(t("Kopiuj listę błędów dla asystenta AI", "Copy the fault list for your AI assistant"))
+                    Button { inspector.toggle() } label: { Label(t("Szczegóły", "Details"), systemImage: "sidebar.trailing") }
+                        .help(t("Pokaż / ukryj szczegóły błędu", "Show / hide the fault details"))
                 }
             }
         }
@@ -453,7 +466,7 @@ struct LivePage: View {
                     Button { m.liveOn ? m.stopLive() : m.startLive() } label: {
                         Label(m.liveOn ? t("Zatrzymaj", "Stop") : t("Start", "Start"), systemImage: m.liveOn ? "pause.fill" : "play.fill")
                     }
-                    .labelStyle(.titleAndIcon)
+                    
                 }
             }
         }
@@ -528,9 +541,9 @@ struct EnginePage: View {
         .toolbar {
             ToolbarItem {
                 if m.recording == nil {
-                    Button { m.startRecording() } label: { Label(t("Nagrywaj", "Record"), systemImage: "record.circle") }.labelStyle(.titleAndIcon).disabled(!m.connected)
+                    Button { m.startRecording() } label: { Label(t("Nagrywaj", "Record"), systemImage: "record.circle") }.disabled(!m.connected)
                 } else {
-                    Button { m.stopRecording() } label: { Label(t("Zakończ i analizuj", "Stop and Analyse"), systemImage: "stop.fill") }.labelStyle(.titleAndIcon)
+                    Button { m.stopRecording() } label: { Label(t("Zakończ i analizuj", "Stop and Analyse"), systemImage: "stop.fill") }
                 }
             }
         }
@@ -587,8 +600,8 @@ struct CapturesPage: View {
         }
         .toolbar {
             ToolbarItemGroup {
-                Button { m.refreshCaptures() } label: { Label(t("Odśwież", "Refresh"), systemImage: "arrow.clockwise") }.labelStyle(.titleAndIcon)
-                Button { NSWorkspace.shared.open(Captures.folder) } label: { Label(t("Pokaż w Finderze", "Show in Finder"), systemImage: "folder") }.labelStyle(.titleAndIcon)
+                Button { m.refreshCaptures() } label: { Label(t("Odśwież", "Refresh"), systemImage: "arrow.clockwise") }
+                Button { NSWorkspace.shared.open(Captures.folder) } label: { Label(t("Pokaż w Finderze", "Show in Finder"), systemImage: "folder") }
             }
         }
     }
