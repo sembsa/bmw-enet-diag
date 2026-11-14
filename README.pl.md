@@ -12,6 +12,8 @@ Claude wytłumaczył resztę.
 
 ![Przegląd](docs/screenshots/pl/overview.png)
 
+<sub>Zrzuty: prawdziwy odczyt z F40 (VIN podmieniony); kontrola silnika to wbudowane demo.</sub>
+
 ## Po co kolejna apka do BMW
 
 Większość aplikacji (BimmerLink, Carly, OBDeleven, BimmerCode…) jest świetna, działa na telefonie z

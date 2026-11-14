@@ -12,6 +12,8 @@ can explain the rest.
 
 ![Overview](docs/screenshots/en/overview.png)
 
+<sub>Screenshots: a real read from an F40 with the B38 engine (VIN replaced); the engine check is the built-in demo.</sub>
+
 ## Why another BMW app
 
 Most BMW apps (BimmerLink, Carly, OBDeleven, BimmerCode…) are excellent, run on a phone, use a Bluetooth

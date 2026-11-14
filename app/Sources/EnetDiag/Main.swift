@@ -29,7 +29,10 @@ import SwiftUI
         w.backgroundColor = .windowBackgroundColor
         w.contentView = host
         Task { @MainActor in
-            if !CommandLine.arguments.contains("--offline") { await model.connectDemo() }
+            let a = CommandLine.arguments
+            if a.contains("--replay") { await model.connect() }                          // a saved probe (README shots)
+            else if !a.contains("--offline") { await model.connectDemo() }
+            if let i = a.firstIndex(of: "--analyze"), let p = a[safe: i + 1] { let s = model.section; model.analyze(URL(fileURLWithPath: p)); model.section = s }
             if model.section == .live { model.startLive() }
             if let i = CommandLine.arguments.firstIndex(of: "--engine-step"), i + 1 < CommandLine.arguments.count { model.seed(CommandLine.arguments[i + 1]) }
             if CommandLine.arguments.contains("--record") { model.startRecording() }      // the real check, against the demo car

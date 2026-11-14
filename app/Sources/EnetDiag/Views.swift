@@ -227,7 +227,7 @@ struct Dashboard: View {
         let active = m.faults.filter(\.active).count
         let workshop = m.faults.filter { $0.hint?.severity == .workshop }.count
         let levels = m.report?.findings.map(\.level) ?? []
-        let worst: Finding.Level? = m.report == nil ? nil : levels.contains(.problem) ? .problem : levels.contains(.watch) ? .watch : .ok
+        let worst: Finding.Level? = m.report == nil ? nil : levels.contains(.problem) ? .problem : levels.contains(.watch) ? .watch : levels.contains(.ok) ? .ok : .unknown
         VStack(alignment: .leading, spacing: 24) {
             Card {
                 HStack(spacing: 14) {
@@ -259,7 +259,7 @@ struct Dashboard: View {
                     Stat(title: t("Do warsztatu", "For a Workshop"), symbol: "wrench.and.screwdriver", value: "\(workshop)",
                          caption: t("wg naszych podpowiedzi", "by our hints"), color: workshop > 0 ? .red : .green)
                     Stat(title: t("Kontrola silnika", "Engine Check"), symbol: "engine.combustion",
-                         value: worst.map { $0 == .ok ? t("Bez uwag", "All Good") : $0 == .watch ? t("Uwagi", "Notes") : t("Problem", "Problem") } ?? "–",
+                         value: worst.map { $0 == .ok ? t("Bez uwag", "All Good") : $0 == .watch ? t("Uwagi", "Notes") : $0 == .unknown ? t("Za mało danych", "Not enough data") : t("Problem", "Problem") } ?? "–",
                          caption: m.reportOrigin, color: worst?.color ?? .secondary)
                     Stat(title: t("Przebieg", "Odometer"), symbol: "road.lanes", value: m.live.last?["odometer"].map { "\(Int($0)) km" } ?? "–",
                          caption: m.isDemo ? t("symulowane auto", "simulated car") : m.connection)
@@ -812,7 +812,7 @@ struct EnginePage: View {
     @ViewBuilder var result: some View {
         if let r = m.report {
             let levels = r.findings.map(\.level)
-            let worst: Finding.Level = levels.contains(.problem) ? .problem : levels.contains(.watch) ? .watch : r.findings.isEmpty ? .unknown : .ok
+            let worst: Finding.Level = levels.contains(.problem) ? .problem : levels.contains(.watch) ? .watch : levels.contains(.ok) ? .ok : .unknown
             let related = m.faults.filter { f in r.findings.contains { $0.level != .ok && $0.level != .unknown && $0.relatedKinds.contains(f.kind) } }
             let file = m.captures.first { $0.lastPathComponent == m.reportName }
             ReportSourceBanner(again: { m.newCheck = true })
