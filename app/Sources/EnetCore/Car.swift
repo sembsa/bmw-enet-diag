@@ -30,7 +30,7 @@ public struct Probe: Codable, Sendable {
 }
 
 public actor Car {
-    let transport: Transport
+    private let transport: Transport
     public nonisolated let connection: String
     private var supported: Set<UInt8>?
     private var log: [String: String] = [:]
@@ -54,7 +54,8 @@ public actor Car {
                         (h, ident) = g
                     }
                     let t = try TcpTransport(host: h)
-                    c.resume(returning: Car(transport: t, connection: ident.isEmpty ? h : "\(h) · \(ident)"))
+                    _ = ident                               // the ident text carries the VIN: not shown
+                    c.resume(returning: Car(transport: t, connection: h))
                 } catch { c.resume(throwing: error) }
             }
         }
@@ -99,7 +100,7 @@ public actor Car {
     public func faults() async throws -> [Fault] {
         var out: [Fault] = []
         for (addr, resp) in try await askAll([0x19, 0x02, 0xFF]) {
-            for (code, st) in parseDtcs(resp) {
+            for (code, st) in parseDtcs(resp) where st & 0x0D != 0 {   // failed now, pending or confirmed
                 out.append(Fault(unit: Hints.unitName(addr), address: String(format: "%02X", addr), code: code, status: st,
                                  active: st & 0x01 != 0, pending: st & 0x04 != 0, confirmed: st & 0x08 != 0))
             }

@@ -22,9 +22,9 @@ public enum Captures {
 
     /// A capture by name, only inside the captures folder.
     public static func url(_ name: String) throws -> URL {
-        let u = folder.appendingPathComponent((name as NSString).lastPathComponent)
-        guard u.deletingLastPathComponent().standardizedFileURL == folder.standardizedFileURL,
-              FileManager.default.fileExists(atPath: u.path) else {
+        let u = folder.appendingPathComponent((name as NSString).lastPathComponent).resolvingSymlinksInPath()
+        let regular = (try? u.resourceValues(forKeys: [.isRegularFileKey]).isRegularFile) == true
+        guard u.deletingLastPathComponent().path == folder.resolvingSymlinksInPath().path, regular else {
             throw LinkError(description: "no such capture: \(name)")
         }
         return u
@@ -65,7 +65,7 @@ public enum Captures {
         guard let head = lines.first?.split(separator: ",", omittingEmptySubsequences: false).map(String.init) else { return [] }
         return lines.dropFirst().map { line in
             var s: Sample = [:]
-            for (k, v) in zip(head, line.split(separator: ",", omittingEmptySubsequences: false)) { if let d = Double(v) { s[k] = d } }
+            for (k, v) in zip(head, line.split(separator: ",", omittingEmptySubsequences: false)) { if let d = Double(v), d.isFinite { s[k] = d } }
             return s
         }
     }

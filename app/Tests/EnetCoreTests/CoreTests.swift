@@ -8,7 +8,8 @@ final class AllowlistTests: XCTestCase {
     func testReadsPass() throws {
         let ok: [(UInt8, [UInt8])] = [(0x12, [0x01, 0x0C]), (0x12, [0x02, 0x02, 0x00]), (0x12, [0x03]), (0x12, [0x07]),
                                       (0x12, [0x09, 0x02]), (0x12, [0x22, 0x58, 0x89]), (0x40, [0x19, 0x02, 0xFF]),
-                                      (0xDF, [0x19, 0x02, 0xFF]), (0x63, [0x22, 0xF1, 0x90]), (0x12, [0x19, 0x04, 0x10, 0x1F, 0x01, 0xFF])]
+                                      (0xDF, [0x19, 0x02, 0xFF]), (0x63, [0x19, 0x02, 0xFF]), (0x12, [0x19, 0x04, 0x10, 0x1F, 0x01, 0xFF]),
+                                      (0x12, [0x06, 0xA2]), (0x12, [0x0A])]
         for (t, r) in ok { try Allowlist.check(t, r) }
     }
 
@@ -18,6 +19,7 @@ final class AllowlistTests: XCTestCase {
             (0x12, [0x27, 0x01]), (0x12, [0x2E, 0x01, 0x02]), (0x40, [0x2F, 0x45, 0x01, 0x03]), (0x12, [0x31, 0x01, 0x30, 0x00]),
             (0x12, [0x11, 0x01]), (0x12, [0x3E, 0x00]), (0x12, [0x28, 0x00]), (0x12, [0x85, 0x02]), (0x12, [0x34]),
             (0x12, [0x36]), (0x12, [0x37]), (0x12, [0x19, 0x14]), (0x63, [0x22, 0x17, 0x2A]), (0x40, [0x01, 0x0C]),
+            (0x63, [0x22, 0xF1, 0x90]), (0x12, [0x08, 0x01]), (0x40, [0x06, 0xA2]),
             (0xF4, [0x19, 0x02, 0xFF]), (0x00, [0x19, 0x02, 0xFF]), (0xFF, [0x19, 0x02, 0xFF]), (0x12, [])]
         for (t, r) in bad {
             XCTAssertThrowsError(try Allowlist.check(t, r), String(format: "%02x %@", t, hex(r))) { XCTAssertTrue($0 is NotAllowed) }
@@ -211,5 +213,51 @@ final class DemoTests: XCTestCase {
         let r = Analysis.analyze(Car.demoLog())
         XCTAssertEqual(r.findings.first { $0.check == "mixture" }?.level, .problem)
         XCTAssertEqual(r.findings.first { $0.check == "charging" }?.level, .ok)
+    }
+}
+
+final class HardeningTests: XCTestCase {
+    /// The gateway hangs up: the next request is an error, the process lives (no SIGPIPE).
+    func testClosedGatewayIsAnErrorNotACrash() throws {
+        let gw = FakeGateway(replies: [])
+        let t = try TcpTransport(host: "127.0.0.1", port: gw.port, timeout: 1)
+        _ = try? t.send(0x12, [0x01, 0x0C])
+        Thread.sleep(forTimeInterval: 0.2)
+        var failed = false
+        for _ in 0..<5 { do { _ = try t.send(0x12, [0x01, 0x0C]) } catch { failed = true; break } }
+        XCTAssertTrue(failed)
+        t.close()
+    }
+
+    func testOnlyLocalGateways() {
+        XCTAssertThrowsError(try TcpTransport(host: "8.8.8.8", port: 6801, timeout: 1))
+        XCTAssertTrue(TcpTransport.isLocal(0xA9FE0001)); XCTAssertTrue(TcpTransport.isLocal(0xC0A80101))
+        XCTAssertFalse(TcpTransport.isLocal(0x08080808))
+    }
+
+    func testCapturesConfinedAndFinite() throws {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        setenv("ENETDIAG_CAPTURES", dir.path, 1)
+        defer { unsetenv("ENETDIAG_CAPTURES") }
+        let outside = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + ".json")
+        try Data("{}".utf8).write(to: outside)
+        try FileManager.default.createSymbolicLink(at: dir.appendingPathComponent("link.json"), withDestinationURL: outside)
+        XCTAssertThrowsError(try Captures.url("link.json"))
+        try Data("rpm,coolant\nnan,90\ninf,91\n800,92\n".utf8).write(to: dir.appendingPathComponent("log-x.csv"))
+        let rows = try Captures.readLog(try Captures.url("log-x.csv"))
+        XCTAssertTrue(rows.allSatisfy { $0.values.allSatisfy(\.isFinite) })
+        XCTAssertEqual(rows.compactMap { $0["rpm"] }, [800])
+    }
+
+    func testVinRedactedAndNonFaultsHidden() async throws {
+        XCTAssertEqual(MCP.redactVIN("WBA12345678901234"), "WBA12345678******")
+        final class T: Transport, @unchecked Sendable {
+            func send(_ t: UInt8, _ u: [UInt8]) throws -> [UInt8]? { nil }
+            func sendAll(_ u: [UInt8]) throws -> [UInt8: [UInt8]] { [0x12: [0x59, 0x02, 0xFF, 0x10, 0x1F, 0x01, 0x09, 0x11, 0x11, 0x11, 0x40]] }
+            func close() {}
+        }
+        let f = try await Car(transport: T(), connection: "t").faults()
+        XCTAssertEqual(f.map(\.code), ["101F01"])      // 0x40 alone (not completed since clear) is not a fault
     }
 }

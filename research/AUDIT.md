@@ -33,7 +33,7 @@ The read-only core is sound: the allowlist is correct and tested, `Car` is a dee
 
 The List selects values of type `Section` (the binding is `Section?`), but no row carries a `Section` tag:
 
-| Variant | Row tag the List sees | Preselected row highlighted | Binding after selecting row "live" |
+| Variant | Row tag the List sees (inferred) | Preselected row highlighted | Binding after selecting row "live" |
 |---|---|---|---|
 | HEAD: `.tag(s).badge(…)` | implicit id, a `String` (the tag is buried under `.badge`) | no | `nil` |
 | Working tree: `.badge(…).tag(Optional(s))` | `Section?`, not `Section` | no | `nil` |
@@ -41,7 +41,7 @@ The List selects values of type `Section` (the binding is `Section?`), but no ro
 | `.badge(…).tag(s)` | `Section` | yes | `.live` |
 | `id: Self`, no tag | `Section` | yes | `.live` |
 
-So the suspicion about `.badge` and `.tag` order was right for the committed code, and the uncommitted fix trades it for a type mismatch. In both, a click sets `m.section = nil`, and `m.section ?? .overview` (line 22) shows Overview. This is also why the menu shortcuts ⌘1–6 and `--section` still work: they set the model directly. The offscreen render of `RootView` with `--section faults` shows the Faults page with no sidebar row highlighted.
+So the suspicion about `.badge` and `.tag` order was right for the committed code, and the uncommitted fix trades it for a type mismatch. In both, a click sets `m.section = nil`, and `m.section ?? .overview` (line 22) shows Overview. The tag column is my reading of why; the two right-hand columns are measured. This is also why the menu shortcuts ⌘1–6 and `--section` still work: they set the model directly. The offscreen render of `RootView` with the model's section set to Faults shows the Faults page with no sidebar row highlighted.
 
 Measured in a standalone repro (seven lists, the NSTableView behind each read and driven in-process, built for macOS 14 and 27). The selection was made with `selectRowIndexes`, not a real click.
 
@@ -109,7 +109,7 @@ guard JSONSerialization.isValidJSONObject(out) else { throw LinkError(descriptio
 Fix: one `Probe.redacted()` in EnetCore that blanks `vin`, strips the ident from `connection`, and replaces the VIN bytes in `exchanges["12:22f190"]`. Use it in `read_capture` by default (show the last 7 characters at most), in an "Export without VIN" action, and for fixtures. Show only the IP in the toolbar.
 
 ### P1-5 The head unit is reached (decision needed)
-`app/Sources/EnetCore/Allowlist.swift:22-27`, `app/Sources/EnetCore/Car.swift:101, 145-150`, `app/Tests/EnetCoreTests/CoreTests.swift:10`
+`app/Sources/EnetCore/Allowlist.swift:22-27`, `app/Sources/EnetCore/Car.swift:101, 145-150`, `app/Tests/EnetCoreTests/CoreTests.swift:11`
 
 - The functional scan `19 02 FF` to `0xDF` reaches every unit, including the head unit (`0x63`), telematics (`0x61`) and the cluster.
 - `probe()` sends physical `19 04` / `19 06` to any unit with an active fault, so to `0x63` when it has one.
@@ -146,9 +146,9 @@ Fix: keep only records where `status & 0x0D != 0` (failed, pending or confirmed)
 | P2-9 | `Transport.swift:97-100` | A response is matched by source address only. A late answer to the functional scan from 0x12 can be taken as the answer to the next 0x12 request; in `probe()` it could be stored as a fault's "snapshot". | Accept only `sid + 0x40` or `7F sid`; skip the rest. |
 | P2-10 | `Car.swift:71`, `Transport.swift:116` | `close()` closes the fd outside the serial queue while `recv` may be blocked on it (Disconnect during live). The fd number can be reused by another open. | `shutdown(fd, SHUT_RDWR)` now, `close(fd)` on the queue. |
 | P2-11 | `Main.swift:22` | `WindowGroup` allows ⌘N: every window shares one Model, and each new window reruns `.task` (a second demo connect). Closing the last window leaves the app running and polling the car with no window. | `Window("BMW ENET Diag", id: "main")`: one window, and the app quits when it closes. |
-| P2-12 | `Analysis.swift:108-118` | The air mass check compares MAF with a speed-density estimate at a fixed 0.85 volumetric efficiency, idle against 2500 rpm. On a turbo engine with variable valve lift, air per unit of manifold pressure changes with lift and boost, so the ratio drifts on a healthy engine. Demo data gives 0.84, already near the 20 % limit. | Mark the finding "indicative" until checked on real logs, or compare MAF with `load`-based air mass. Needs a real log to decide. |
-| P2-13 | `Analysis.swift:127-132` | Idle vacuum "typical ≤ 45 kPa" assumes a throttled engine. Public sources disagree on what Valvetronic engines show at idle, and none found gives B38/B48 figures. | Treat as unknown until the first log from the car; do not show `.watch` on this check before then. |
-| P2-14 | `Analysis.swift:120-125` | Charging "low" below 13.2 V. Cars with intelligent alternator control lower the voltage on purpose; a short idle log can land there. Not verified for this car. | Use `.watch` only below about 12.6 V running, or word it as "may be normal with smart charging". |
+| P2-12 | `Analysis.swift:108-118` | The air mass check compares MAF with a speed-density estimate at a fixed 0.85 volumetric efficiency, idle against 2500 rpm. My reasoning, with no source or log behind it: on a turbo engine with variable valve lift, air per unit of manifold pressure changes with lift and boost, so the ratio may drift on a healthy engine. Demo data gives 0.84, already near the 20 % limit. | Mark the finding "indicative" until checked on real logs from the car. |
+| P2-13 | `Analysis.swift:127-132` | Idle vacuum "typical ≤ 45 kPa" is a rule of thumb not checked on this car. The one public source found (a trade article on Valvetronic engines) gives 600–690 mbar of vacuum at idle, which agrees with the limit; nothing found for B38/B48. | Confirm on the first real log before trusting a `.watch` here. |
+| P2-14 | `Analysis.swift:120-125` | Charging "low" below 13.2 V. Cars with intelligent alternator control may lower the voltage on purpose, so a short idle log could land there. Reasoning only; not verified for this car. | Check on a real log; if it happens, word it as "may be normal with smart charging". |
 
 ### Localisation and text
 
@@ -216,7 +216,7 @@ In priority order:
 2. **Give the window a title and move the status into it.** Remove the in-content `Header` (large title, subtitle, stripe) from every page. On the Mac the title belongs in the toolbar.
    ```swift
    .navigationTitle((m.section ?? .overview).title)
-   .navigationSubtitle(m.connected ? m.connection : t("Niepołączono", "Not connected"))
+   .navigationSubtitle(m.connected ? m.gatewayIP : t("Niepołączono", "Not connected"))   // IP only, see P1-4
    ```
    This replaces the dot-and-text item at `.navigation` (`Views.swift:60-68`), a slot meant for back and sidebar controls.
 
@@ -249,7 +249,7 @@ In priority order:
 
 8. **Stop overriding the accent colour.** `.tint(Theme.blue)` on the window (`Main.swift:25`) and on buttons ignores the accent the owner chose in System Settings. Use an `AccentColor` in an asset catalog, and semantic colours (`.red`, `.orange`, `.green`) for status so they adapt to dark mode and Increase Contrast. Keep the three-colour stripe in one place (the About panel or the sidebar footer), not under every title.
 
-9. **Use the system's language handling.** Declare `en` and `pl` in the bundle (`CFBundleLocalizations`, `CFBundleDevelopmentRegion`); macOS then offers the per-app language under System Settings > General > Language & Region, and system menus match. Remove the in-app picker and `.id(lang)`; `Lang.current` becomes `Bundle.main.preferredLocalizations.first`. The `t(pl, en)` helper can stay. A String Catalog would be the full native route, but it needs the Xcode build system; whether `swift build` compiles `.xcstrings` on this toolchain was not checked.
+9. **Use the system's language handling.** Declare `en` and `pl` in the bundle (`CFBundleLocalizations`, `CFBundleDevelopmentRegion`); macOS should then offer the per-app language under System Settings > General > Language & Region, and system menus should match (standard behaviour for bundles with several localisations; not tested with this bundle). Remove the in-app picker and `.id(lang)`; `Lang.current` becomes `Bundle.main.preferredLocalizations.first`. The `t(pl, en)` helper can stay. A String Catalog would be the full native route, but it needs the Xcode build system; whether `swift build` compiles `.xcstrings` on this toolchain was not checked.
 
 10. **One window, standard commands.** `Window` scene (P2-11), `.windowResizability(.contentMinSize)`, a Help menu entry linking to the README, and `ToolbarCommands()`.
 
@@ -322,7 +322,7 @@ These need `22 xxxx` identifiers and scalings that come from BMW's diagnostic de
 
 A clean way forward for these: keep storing raw answers, let the owner's AI reason over public sources, and accept community notes written in the contributor's own words with a source link, as `data/known_codes.json` does now.
 
-One note on that file: 86 of its 90 source links are BMW service bulletins published by NHTSA. They are public documents and the notes are reworded, which is a different thing from copying a code table. Keep it that way: short own-words notes per code, no bulk import of bulletin text.
+One note on that file: 86 of its 90 source links are BMW service bulletins published by NHTSA. They are public documents. I read one entry of 71 and compared none with its bulletin, so I cannot say how close the wording is to the source. The file calls them own notes; if that holds, it is a different thing from copying a code table. Worth a spot check, and going forward: short own-words notes per code, no bulk import of bulletin text.
 
 ---
 

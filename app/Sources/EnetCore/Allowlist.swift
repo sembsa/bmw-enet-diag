@@ -1,6 +1,7 @@
 // Allowlist - the one check every request to the car passes before a byte goes out. Read-only by construction:
-// every unit (and all at once): read fault memory (19 01/02/04/06) and identification (22 F1xx);
-// the engine unit (0x12) also OBD-II read services (01 02 03 07 09) and any 22 identifier. Nothing else.
+// every unit (and all at once): read fault memory (19 01/02/04/06) only;
+// the engine unit (0x12) also OBD-II read services (01 02 03 06 07 09 0A) and 22 (read by identifier). Nothing else:
+// no clearing (14, OBD 04), sessions (10), security access (27), writes or routines (2E 2F 31), resets, downloads.
 
 import Foundation
 
@@ -15,7 +16,7 @@ public struct NotAllowed: Error, CustomStringConvertible {
 }
 
 public enum Allowlist {
-    static let obdRead: Set<UInt8> = [0x01, 0x02, 0x03, 0x07, 0x09]
+    static let obdRead: Set<UInt8> = [0x01, 0x02, 0x03, 0x06, 0x07, 0x09, 0x0A]   // current data, freeze frame, codes, monitor results, info, permanent codes
     static let dtcSubs: Set<UInt8> = [0x01, 0x02, 0x04, 0x06]
 
     public static func check(_ target: UInt8, _ uds: [UInt8]) throws {
@@ -24,7 +25,7 @@ public enum Allowlist {
         }
         guard let sid = uds.first else { throw NotAllowed(description: "empty request") }
         if sid == 0x19, uds.count >= 2, dtcSubs.contains(uds[1]) { return }
-        if sid == 0x22, uds.count >= 3, target == Address.engine || uds[1] == 0xF1 { return }
+        if sid == 0x22, uds.count >= 3, target == Address.engine { return }
         if target == Address.engine, obdRead.contains(sid) { return }
         throw NotAllowed(description: String(format: "service %@ to 0x%02X refused (read-only)", hex(Array(uds.prefix(2))), target))
     }

@@ -35,6 +35,9 @@ public enum MCP {
         return o
     }
 
+    /// WBA… (maker) and the model-year/plant part stay; the serial number goes.
+    static func redactVIN(_ v: String) -> String { v.count == 17 ? String(v.prefix(11)) + "******" : "******" }
+
     static func car(_ args: [String: Any]) async throws -> Car {
         if let r = ProcessInfo.processInfo.environment["ENETDIAG_REPLAY"] { return try Car(replay: URL(fileURLWithPath: r)) }
         return try await Car.connect(host: args["host"] as? String)
@@ -53,7 +56,8 @@ public enum MCP {
         case "read_capture":
             let u = try Captures.url(args["file"] as? String ?? "")
             var d = try JSONSerialization.jsonObject(with: Data(contentsOf: u)) as? [String: Any] ?? [:]
-            d["exchanges"] = nil
+            d["exchanges"] = nil                                     // raw answers hold the VIN
+            if let v = d["vin"] as? String { d["vin"] = redactVIN(v) }
             return d
         case "analyze_log":
             let r = Analysis.analyze(try Captures.readLog(try Captures.url(args["file"] as? String ?? "")))

@@ -29,7 +29,14 @@ final class TcpTransport: Transport, @unchecked Sendable {
         addr.sin_family = sa_family_t(AF_INET)
         addr.sin_port = port.bigEndian
         guard inet_pton(AF_INET, host, &addr.sin_addr) == 1 else { throw LinkError(description: "bad address \(host)") }
+        guard Self.isLocal(UInt32(bigEndian: addr.sin_addr.s_addr)) else {
+            throw LinkError(description: "\(host) is not a local address (the ENET gateway is link-local or private)")
+        }
         fd = socket(AF_INET, SOCK_STREAM, 0)
+        guard fd >= 0 else { throw LinkError(description: "socket: \(String(cString: strerror(errno)))") }
+        var on: Int32 = 1, secs = Int32(max(1, timeout))
+        setsockopt(fd, SOL_SOCKET, SO_NOSIGPIPE, &on, socklen_t(MemoryLayout<Int32>.size))      // a closed gateway is an error, not a crash
+        setsockopt(fd, IPPROTO_TCP, TCP_CONNECTIONTIMEOUT, &secs, socklen_t(MemoryLayout<Int32>.size))
         var tv = timeval(tv_sec: Int(timeout), tv_usec: 0)
         setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, &tv, socklen_t(MemoryLayout<timeval>.size))
         let ok = withUnsafePointer(to: &addr) {
@@ -42,6 +49,11 @@ final class TcpTransport: Transport, @unchecked Sendable {
         }
     }
 
+    /// 169.254/16 (ENET link-local), 10/8, 172.16/12, 192.168/16, 127/8 (tests)
+    static func isLocal(_ a: UInt32) -> Bool {
+        a >> 16 == 0xA9FE || a >> 24 == 10 || a >> 20 == 0xAC1 || a >> 16 == 0xC0A8 || a >> 24 == 127
+    }
+
     private func setTimeout(_ s: Double) {
         var tv = timeval(tv_sec: Int(s), tv_usec: Int32((s - floor(s)) * 1_000_000))
         setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &tv, socklen_t(MemoryLayout<timeval>.size))
@@ -50,11 +62,16 @@ final class TcpTransport: Transport, @unchecked Sendable {
     /// n bytes, or nil on timeout
     private func read(_ n: Int) throws -> [UInt8]? {
         var buf = [UInt8](repeating: 0, count: n), got = 0
+        let giveUp = Date().addingTimeInterval(timeout)
         while got < n {
             let r = buf.withUnsafeMutableBytes { recv(fd, $0.baseAddress! + got, n - got, 0) }
             if r == 0 { throw LinkError(description: "the gateway closed the connection") }
             if r < 0 {
-                if errno == EAGAIN || errno == EWOULDBLOCK { if got == 0 { return nil }; continue }
+                if errno == EAGAIN || errno == EWOULDBLOCK {
+                    if got == 0 { return nil }
+                    if Date() > giveUp { throw LinkError(description: "the gateway stalled mid-frame") }
+                    continue
+                }
                 throw LinkError(description: String(cString: strerror(errno)))
             }
             got += r
@@ -71,7 +88,7 @@ final class TcpTransport: Transport, @unchecked Sendable {
             let len = Int(h[0]) << 24 | Int(h[1]) << 16 | Int(h[2]) << 8 | Int(h[3])
             let ctrl = Int(h[4]) << 8 | Int(h[5])
             setTimeout(timeout)
-            guard len >= 2, let body = try read(len) else { throw LinkError(description: "short frame") }
+            guard len >= 2, len <= 65_536, let body = try read(len) else { throw LinkError(description: "bad frame length \(len)") }
             if ctrl != 1 || body.count <= 2 { continue }
             return (body[0], Array(body[2...]))
         }
@@ -79,6 +96,7 @@ final class TcpTransport: Transport, @unchecked Sendable {
     }
 
     private func write(_ target: UInt8, _ uds: [UInt8]) throws {
+        try Allowlist.check(target, uds)                      // second line of defence: the socket itself
         let gap = 0.04 - Date().timeIntervalSince(last)
         if gap > 0 { Thread.sleep(forTimeInterval: gap) }
         let n = UInt32(2 + uds.count)
