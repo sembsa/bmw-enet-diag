@@ -13,6 +13,12 @@ public struct Fault: Codable, Identifiable, Sendable, Hashable {
 
 public typealias Snapshot = [String: Double]
 
+public struct Misfire: Codable, Sendable, Hashable, Identifiable {
+    public let cylinder: Int
+    public let current: Double?, average: Double?
+    public var id: Int { cylinder }
+}
+
 public struct Probe: Codable, Sendable {
     public var at: String
     public var connection: String
@@ -26,6 +32,7 @@ public struct Probe: Codable, Sendable {
     public var faultDetails: [String: [String: String]]     // "12:101F01" -> snapshot / extended, hex
     public var freezeFrame: Snapshot
     public var freezeFrameTrigger: String?
+    public var misfires: [Misfire] = []
     public var exchanges: [String: String]                  // replay capture (functional ones: JSON text)
 }
 
@@ -139,6 +146,22 @@ public actor Car {
         return out
     }
 
+    /// Misfire counters per cylinder (OBD mode 06), for the cylinders the engine unit reports.
+    public func misfires() async throws -> [Misfire] {
+        var sup = Set<UInt8>()
+        for base: UInt8 in [0x00, 0x20, 0x40, 0x60, 0x80, 0xA0] {
+            guard let r = try await ask(Address.engine, [0x06, base]), r.count >= 6, r[0] == 0x46 else { continue }
+            let bits = UInt32(r[2]) << 24 | UInt32(r[3]) << 16 | UInt32(r[4]) << 8 | UInt32(r[5])
+            for i in 0..<32 where bits & (1 << (31 - UInt32(i))) != 0 { sup.insert(base &+ UInt8(i + 1)) }
+        }
+        var out: [Misfire] = []
+        for (n, mid) in (0xA2...0xAD).enumerated() where sup.contains(UInt8(mid)) {
+            let m = parseMisfire(try await ask(Address.engine, [0x06, UInt8(mid)]), mid: UInt8(mid))
+            out.append(Misfire(cylinder: n + 1, current: m.current, average: m.average))
+        }
+        return out
+    }
+
     /// Everything worth keeping from one visit: a first look, and a replay capture.
     public func probe() async throws -> Probe {
         let faults = try await faults()
@@ -164,11 +187,15 @@ public actor Car {
             for p in Pids.all where sup.contains(p.pid) { ff[p.key] = try await value(p, sid: 0x02, frame: 0) }
         }
         let snap = try await snapshot()
-        return Probe(at: ISO8601DateFormatter().string(from: Date()), connection: connection, vin: vin,
+        let mis = (try? await misfires()) ?? []
+        var p = Probe(at: ISO8601DateFormatter().string(from: Date()), connection: connection, vin: vin,
                      supportedPids: sup.sorted().map { String(format: "%02X", $0) },
                      knownValues: Pids.all.filter { sup.contains($0.pid) }.map(\.key),
                      hasMaf: sup.contains(0x10), snapshot: snap, faults: faults,
                      obdStored: stored, obdPending: pending, faultDetails: details,
                      freezeFrame: ff, freezeFrameTrigger: trigger, exchanges: log)
+        p.misfires = mis
+        p.exchanges = log
+        return p
     }
 }

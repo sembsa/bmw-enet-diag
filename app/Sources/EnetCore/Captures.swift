@@ -39,8 +39,8 @@ public enum Captures {
         return u
     }
 
-    public static let logKeys = ["rpm", "speed", "coolant", "iat", "stft", "ltft", "map", "maf", "throttle", "load",
-                                 "lambda", "lambda_cmd", "baro", "voltage"]
+    public static let logKeys = ["rpm", "speed", "coolant", "oil", "iat", "stft", "ltft", "fuel_status", "map", "maf", "throttle",
+                                 "load", "lambda", "lambda_cmd", "rail", "cat1", "baro", "voltage"]
 
     /// CSV log: t + logKeys, one row per snapshot.
     public final class LogWriter {

@@ -51,7 +51,8 @@ public enum Analysis {
     }
 
     public static func analyze(_ rows: [Sample]) -> Report {
-        let warm = rows.filter { ($0["coolant"] ?? 0) >= warmC }
+        // closed loop only (fuel system status bit 0x02) when the log has it: open-loop trims mean nothing
+        let warm = rows.filter { ($0["coolant"] ?? 0) >= warmC && $0["fuel_status"].map { Int($0) & 0x02 != 0 } ?? true }
         let hasMaf = rows.contains { ($0["maf"] ?? 0) > 0 }
         var f: [Finding] = [], notes: [L] = []
         let idle = warm.filter { bin($0) == "idle" }, mid = warm.filter { bin($0) == "mid" }

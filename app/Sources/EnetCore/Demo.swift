@@ -27,6 +27,18 @@ enum DemoScenario {
         s["lambda"] = 1 + 0.01 * n(4.2)
         s["lambda_cmd"] = 1
         s["voltage"] = 14.1 + 0.05 * n(0.7)
+        s["fuel_status"] = 2
+        s["rail"] = mid ? 120 + 5 * n(0.9) : 52 + n(1.4)
+        s["fuel_rate"] = mid ? 3.2 : 0.7
+        s["fuel_level"] = 63
+        s["cat1"] = min(640, 420 + t * 2)
+        s["cat2"] = min(520, 300 + t * 1.5)
+        s["mil"] = 0
+        s["runtime"] = 600 + t
+        s["dist_mil"] = 0
+        s["dist_clear"] = 1840
+        s["warmups"] = 37
+        s["odometer"] = 48213
         return s
     }
 
@@ -40,6 +52,13 @@ enum DemoScenario {
         func u8(_ x: Double) -> [UInt8] { [UInt8(max(0, min(255, x.rounded())))] }
         switch key {
         case "rpm": return u16(v * 4)
+        case "rail", "cat1", "cat2": return key == "rail" ? u16(v * 10) : u16((v + 40) * 10)
+        case "fuel_rate": return u16(v * 20)
+        case "runtime", "dist_mil", "dist_clear": return u16(v)
+        case "fuel_level": return u8(v * 255 / 100)
+        case "fuel_status": return u8(v) + [0]
+        case "mil": return u8(v * 128)
+        case "odometer": let i = UInt32(v * 10); return [UInt8(i >> 24), UInt8(i >> 16 & 0xFF), UInt8(i >> 8 & 0xFF), UInt8(i & 0xFF)]
         case "maf": return u16(v * 100)
         case "voltage": return u16(v * 1000)
         case "lambda": return u16(v * 32768) + [0x80, 0x00]
@@ -76,11 +95,18 @@ final class DemoTransport: Transport, @unchecked Sendable {
             if pid % 0x20 == 0 {                                    // supported-PID bitmaps
                 var bits: UInt32 = 0
                 for p in Pids.all where p.pid > pid && p.pid <= pid + 0x20 { bits |= 1 << (31 - UInt32(p.pid - pid - 1)) }
-                if pid + 0x20 <= 0x40 { bits |= 1 }                     // the next bitmap follows
+                if Pids.all.contains(where: { $0.pid > pid + 0x20 }) { bits |= 1 }   // the next bitmap follows
                 return [0x41, pid, UInt8(bits >> 24), UInt8(bits >> 16 & 0xFF), UInt8(bits >> 8 & 0xFF), UInt8(bits & 0xFF)]
             }
             guard let p = Pids.all.first(where: { $0.pid == pid }), let v = DemoScenario.sample(Date().timeIntervalSince(start))[p.key] else { return nil }
             return [0x41, pid] + DemoScenario.encode(p.key, v)
+        case 0x06:                                                  // misfire monitor: 4 cylinders, cylinder 2 a little
+            guard uds.count >= 2 else { return nil }
+            let mid = uds[1]
+            if mid % 0x20 == 0 { return [0x46, mid] + (mid == 0xA0 ? [0x78, 0x00, 0x00, 0x00] : [0x00, 0x00, 0x00, mid < 0xA0 ? 0x01 : 0x00]) }
+            guard (0xA2...0xA5).contains(mid) else { return nil }
+            let c: UInt8 = mid == 0xA3 ? 7 : 0, a: UInt8 = mid == 0xA3 ? 3 : 0
+            return [0x46, mid, 0x0B, 0x24, 0x00, a, 0x00, 0x00, 0xFF, 0xFF, 0x0C, 0x24, 0x00, c, 0x00, 0x00, 0xFF, 0xFF]
         case 0x03: return [0x43, 0x01, 0x01, 0x71]                  // P0171
         case 0x07: return [0x47, 0x00]
         case 0x02: return [0x42, 0x02, 0x00, 0x00, 0x00]
