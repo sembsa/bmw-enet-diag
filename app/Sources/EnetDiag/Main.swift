@@ -29,7 +29,7 @@ import SwiftUI
         w.backgroundColor = .windowBackgroundColor
         w.contentView = host
         Task { @MainActor in
-            await model.connectDemo()
+            if !CommandLine.arguments.contains("--offline") { await model.connectDemo() }
             if model.section == .live { model.startLive() }
             try? await Task.sleep(for: .seconds(4))
             host.layoutSubtreeIfNeeded()

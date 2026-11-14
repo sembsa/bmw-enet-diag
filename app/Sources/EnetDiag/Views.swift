@@ -27,7 +27,7 @@ struct RootView: View {
                 case .ai: AIPage()
                 }
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)          // empty states sit in the middle; tables and scroll views fill
             .navigationTitle((m.section ?? .overview).title)
             .navigationSubtitle(m.isDemo ? t("Demo – symulowane auto", "Demo – simulated car") : m.connected ? m.connection : t("Niepołączono", "Not connected"))
         }
